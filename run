@@ -1,0 +1,13 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import os
+from server.chatserver import PushyChatServer, PushyChatRequestHandler
+
+PUBLIC_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), 'public'))
+
+if __name__ == '__main__':
+    print 'serve content of: %s' % PUBLIC_DIRECTORY
+    os.chdir(PUBLIC_DIRECTORY)
+    server = PushyChatServer(('', 8000), PushyChatRequestHandler)
+    server.serve_forever()

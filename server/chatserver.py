@@ -5,7 +5,6 @@ import os
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer, SocketServer
 
-PUBLIC_DIRECTORY = os.path.abspath(os.path.join(os.path.dirname(__file__), 'public'))
 
 class PushyChatServer(SocketServer.ThreadingMixIn, HTTPServer):
     pass
@@ -34,8 +33,3 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         return dict(parse_param(s) for s in params_string.split('&'))
 
 
-if __name__ == '__main__':
-    print 'serve content of: %s' % PUBLIC_DIRECTORY
-    os.chdir(PUBLIC_DIRECTORY)
-    server = PushyChatServer(('', 8000), PushyChatRequestHandler)
-    server.serve_forever()
