@@ -5,6 +5,8 @@ import os
 import time
 from datetime import datetime
 import socket
+import urllib
+import urlparse
 
 from collections import defaultdict
 from SimpleHTTPServer import SimpleHTTPRequestHandler
@@ -36,7 +38,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
             while True:
                 message = self.find_new_message(chan)
                 if message:
-                    self.wfile.write(unicode(message))
+                    self.wfile.write(message.to_json())
                     self.wfile.flush()
                     self.last_check += 1
                 time.sleep(1)
@@ -56,23 +58,18 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
     def GET(self):
         if not hasattr(self, '_post_get'):
             self._get_data = {}
-            if '?' in self.path:
-                params_string = self.path.split('?')[1]
-                self._post_data = self._parse_params(params_string)
+            path, query = urllib.splitquery(self.path)
+            self._get_data = self._clean_data(urlparse.parse_qs(query or ''))
         return self._get_data
 
     @property
     def POST(self):
         if not hasattr(self, '_post_data'):
             content_length = int(self.headers['content-length'])
-            params_string = self.rfile.read(content_length)
-            self._post_data = self._parse_params(params_string)
+            query = self.rfile.read(content_length)
+            self._post_data = self._clean_data(urlparse.parse_qs(query))
         return self._post_data
 
     @classmethod
-    def _parse_params(cls, params_string):
-        def parse_param(param):
-            return param.split('=') if '=' in param else (param, None)
-        return dict(parse_param(s) for s in params_string.split('&'))
-
-
+    def _clean_data(cls, data):
+        return dict((k, v if len(v) > 1 else v.pop()) for k, v in data.iteritems())

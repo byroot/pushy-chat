@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 from itertools import chain
 from UserDict import UserDict
 
@@ -12,6 +13,10 @@ class Message(object):
     
     def __unicode__(self):
         return u'%s: %s' % (self.login, self.body)
+
+    def to_json(self):
+        return u'(%s)' % json.dumps({'login': self.login, 'body': self.body})
+
     
 class Channel(UserDict, object):
 

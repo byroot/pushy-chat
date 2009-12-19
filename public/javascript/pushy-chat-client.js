@@ -27,18 +27,19 @@ var ChatWindow = Class({
         this.parent = parent;
         this.chan = chan;
         $(this).addClass('window').attr('id', 'window-' + chan);
-        $(this).html('<h1>Hello world!</h1><p>chan: ' + chan + '</p>');
+        $(this).html('<h1>Hello world!</h1><h2>chan: ' + chan + '</h2>');
+        this.messageList = $('<ul>').addClass('message-list');
+        $(this).append(this.messageList);
         $(this).hide();
         this.connect();
     },
     
     activate: function() {
-        console.log(this, 'activate');
         this.parent.setActiveWindow(this.chan);
     },
     
     connect: function() {
-        var callback = this.appendMessage.bind(this);
+        var callback = this.parsePackets.bind(this);
         var chan = this.chan;
         jQuery.enableAjaxStream(true);
         function startStream(){
@@ -50,8 +51,13 @@ var ChatWindow = Class({
         startStream();
     },
     
-    appendMessage: function(packet, status, fulldata, xhr) {
-        $(this).append($('<p>').text(packet));
+    parsePackets: function(packet, status, fulldata, xhr) {
+        var message = eval(packet);
+        if (message) this.appendMessage(message);
+    },
+    
+    appendMessage: function(message) {
+        this.messageList.append($('<li>').text(message.login + ': ' + message.body));
     }
     
 });
@@ -128,7 +134,6 @@ var MessageForm = Class({
     
     send: function(event) {
         event.preventDefault();
-        console.log(arguments);
         jQuery.post('/chat/send/', {
             message: this.messageField.val(),
             chan: this.parent.windowContainer.activeWindow,
