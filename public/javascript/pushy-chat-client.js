@@ -20,6 +20,15 @@ function Class(klass) {
     return klass;
 }
 
+var Message = Class({
+    tag: 'li',
+    
+    initialize: function(login, body) {
+        $(this).append($('<span>').addClass('login').text('<' + login + '> '))
+        $(this).append($('<span>').addClass('message-body').text(body))
+    }
+});
+
 var ChatWindow = Class({
     tag: 'div',
     
@@ -27,7 +36,6 @@ var ChatWindow = Class({
         this.parent = parent;
         this.chan = chan;
         $(this).addClass('window').attr('id', 'window-' + chan);
-        $(this).html('<h1>Hello world!</h1><h2>chan: ' + chan + '</h2>');
         this.messageList = $('<ul>').addClass('message-list');
         $(this).append(this.messageList);
         $(this).hide();
@@ -57,7 +65,7 @@ var ChatWindow = Class({
     },
     
     appendMessage: function(message) {
-        this.messageList.append($('<li>').text(message.login + ': ' + message.body));
+        this.messageList.append(Message.New(message.login, message.body));
     }
     
 });
@@ -65,7 +73,8 @@ var ChatWindow = Class({
 var WindowContainer = Class({
     tag: 'div',
     
-    initialize: function(chan) {
+    initialize: function(parent) {
+        $(this).parent = parent;
         $(this).attr('id', 'windowcontainer');
     },
     
@@ -88,11 +97,19 @@ var Tab = Class({
     tag: 'li',
     
     initialize: function(parent, chatWindow) {
+        this.chan = chatWindow.chan;
+        this.attr('id', 'tab-' + this.  chan).addClass('tab');
         this.parent = parent;
         this.window = chatWindow;
-        $(this).append($('<a>').text(chatWindow.chan).click(chatWindow.activate.bind(chatWindow)));
-    }
+        window.tab = this;
+        $('<a>').text(chatWindow.chan).appendTo(this);
+        $(this).click(this.activate.bind(this));
+    },
     
+    activate: function() {
+        this.window.activate();
+        this.parent.setActiveTab(this.chan);
+    }
 })
 
 var TabList = Class({
@@ -107,12 +124,18 @@ var TabList = Class({
     openTab: function(chan) {
         var newWindow = this.container.appendWindow(chan);
         this.appendTabFor(newWindow);
+        this.setActiveTab(chan);
     },
     
     appendTabFor: function(chatWindow) {
         this.append(Tab.New(this, chatWindow));       
     },
     
+    setActiveTab: function(chan) {
+        this.activeTab = chan;
+        $('#tablist > .tab').removeClass('selected');
+        $('#tablist > #tab-' + chan).addClass('selected');        
+    }
     
 });
 
@@ -123,9 +146,10 @@ var MessageForm = Class({
         $(this).attr('id', 'message-form');
         this.parent = parent;
         this.form = $('<form>');
-        this.messageField = $('<input type="text" name="message">');
-        this.append(this.form.append(this.messageField));
+        this.messageField = $('<input id="message" type="text" name="message">').appendTo(this.form);
+        $('<input type="submit">').appendTo(this.form)
         this.form.submit(this.send.bind(this));
+        this.form.appendTo(this);
     },
     
     clear: function(){
@@ -149,8 +173,9 @@ var LoginForm = Class({
     
     initialize: function(callback) {
         this.action = '#';
-        this.append($('<p><input name="login" type="text"></p>'));
-        this.append($('<p><input name="connect" type="submit"></p>'));
+        $('<label for="login">').text("Login:").appendTo(this);
+        $('<input name="login" type="text">').appendTo(this);
+        $('<input name="connect" type="submit">').appendTo(this);
         this.submit(function(event) {
             event.preventDefault();
             callback($(this).find(':input[name=login]').val());
@@ -160,7 +185,7 @@ var LoginForm = Class({
 });
 
 var Client = Class({
-    tag: 'body',
+    tag: 'div',
     
     initialize: function() {
         this.askLogin();
@@ -175,7 +200,7 @@ var Client = Class({
         if (login) {
             this.login = login;
             $(this).empty();
-            $(this).append(this.windowContainer = WindowContainer.New());
+            $(this).append(this.windowContainer = WindowContainer.New(this));
             $(this).append(this.tabList = TabList.New(this.windowContainer));
             $(this).append(MessageForm.New(this));
             this.tabList.openTab('foo');
@@ -186,23 +211,5 @@ var Client = Class({
 
 
 jQuery(function(){
-    
-    // // Send form
-    //     var sendForm = $('form.send-form');
-    //     sendForm.submit(function() {
-    //         $.post($(this).attr('action'), $(this).serialize(), function() {
-    //             $(this).find(':text').val('');
-    //         }, 'text/plain');
-    //         return false;
-    //     })
-    //     
-    //     // Push client
-    //     function newMessage(packet, status, fulldata, xhr) {
-    //         $('body').append($('<p>').text(packet));
-    //     }
-    //     
-    //     $.ajaxStop(function() { startStream('foo') });
-    //     startStream('foo');
-    //
-    $('html').append(Client.New());
+    $('body').append(Client.New());
 });

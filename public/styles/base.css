@@ -1,0 +1,46 @@
+
+ul {
+    list-style-type: none;
+}
+
+ul.message-list {
+    padding-left: 3px;
+}
+
+ul.message-list > li {
+    height: 20px;
+}
+
+ul#tablist {
+    padding: 0px;
+    margin: 0px;
+}
+
+ul#tablist > li{
+    float: left;
+    padding: 5px;
+    border: 3px solid;
+}
+
+ul#tablist > li.selected {
+    border-color: red;
+}
+
+div.window {
+    border: 3px solid black;
+    height: 400px;
+    line-height: 5px;
+}
+
+div {
+    width: 100%;
+}
+
+div#message-form {
+    float: left;
+    clear: both;
+}
+
+div#message-form input#message {
+    width: 94%;
+}
