@@ -31,7 +31,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         
         chan = self.path.split('/')[-1] 
-        self.last_check = int(self.GET.get('last_check', self.last_index_of(chan)))
+        self.last_check = int(self.GET.get('last_check', self.channels[chan].last_index()))
         try:
             while True:
                 message = self.find_new_message(chan)
@@ -45,17 +45,13 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
             self.log_connection_close(e)
 
     def find_new_message(self, chan):
-        return self.channels[chan].get(self.last_check)
+        return self.channels[chan].get(self.last_check + 1)
         
     def do_POST(self):
         self.channels[self.POST['chan']].append(Message(self.POST['login'], self.POST['message']))
-        self._redirect_to_root()
-
-    def _redirect_to_root(self):
-        self.send_response(301)
-        self.send_header("Location", "/")
+        self.send_response(200)
         self.end_headers()
-
+    
     @property
     def GET(self):
         if not hasattr(self, '_post_get'):

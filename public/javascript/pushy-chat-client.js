@@ -1,3 +1,5 @@
+var $ = jQuery;
+
 Function.prototype.bind = function() { // inspired by protoype
     var __method = this;
     var __args = jQuery.makeArray(arguments);
@@ -7,9 +9,9 @@ Function.prototype.bind = function() { // inspired by protoype
     }
 }
 
-function class(klass) {
+function Class(klass) {
     
-    klass.new = function() {
+    klass.New = function() {
         var self = $.extend($('<' + klass.tag + '>'), klass)
         self.initialize.apply(self, arguments);
         return self;
@@ -18,7 +20,7 @@ function class(klass) {
     return klass;
 }
 
-var ChatWindow = class({
+var ChatWindow = Class({
     tag: 'div',
     
     initialize: function(parent, chan) {
@@ -27,15 +29,34 @@ var ChatWindow = class({
         $(this).addClass('window').attr('id', 'window-' + chan);
         $(this).html('<h1>Hello world!</h1><p>chan: ' + chan + '</p>');
         $(this).hide();
+        this.connect();
     },
     
     activate: function() {
         console.log(this, 'activate');
         this.parent.setActiveWindow(this.chan);
+    },
+    
+    connect: function() {
+        var callback = this.appendMessage.bind(this);
+        var chan = this.chan;
+        jQuery.enableAjaxStream(true);
+        function startStream(){
+            jQuery.get('/chat/' + chan, 
+                function(){ setTimeout(startStream, 20)}, 
+                callback
+            );
+        }
+        startStream();
+    },
+    
+    appendMessage: function(packet, status, fulldata, xhr) {
+        $(this).append($('<p>').text(packet));
     }
+    
 });
 
-var WindowContainer = class({
+var WindowContainer = Class({
     tag: 'div',
     
     initialize: function(chan) {
@@ -43,7 +64,7 @@ var WindowContainer = class({
     },
     
     appendWindow: function(chan) {
-        var newWindow = ChatWindow.new(this, chan);
+        var newWindow = ChatWindow.New(this, chan);
         $(this).append(newWindow);
         this.setActiveWindow(chan);
         return newWindow;
@@ -57,7 +78,7 @@ var WindowContainer = class({
     
 });
 
-var Tab = class({
+var Tab = Class({
     tag: 'li',
     
     initialize: function(parent, chatWindow) {
@@ -68,7 +89,7 @@ var Tab = class({
     
 })
 
-var TabList = class({
+var TabList = Class({
     tag: 'ul',
     
     initialize: function(container) {
@@ -83,13 +104,13 @@ var TabList = class({
     },
     
     appendTabFor: function(chatWindow) {
-        this.append(Tab.new(this, chatWindow));       
+        this.append(Tab.New(this, chatWindow));       
     },
     
     
 });
 
-var MessageForm = class({
+var MessageForm = Class({
     tag: 'div',
     
     initialize: function(parent) {
@@ -118,7 +139,7 @@ var MessageForm = class({
     
 });
 
-var LoginForm = class({
+var LoginForm = Class({
     tag: 'form',
     
     initialize: function(callback) {
@@ -133,7 +154,7 @@ var LoginForm = class({
     }
 });
 
-var Client = class({
+var Client = Class({
     tag: 'body',
     
     initialize: function() {
@@ -141,7 +162,7 @@ var Client = class({
     },
     
     askLogin: function() {
-        this.loginForm = LoginForm.new(this.connect.bind(this));
+        this.loginForm = LoginForm.New(this.connect.bind(this));
         this.append(this.loginForm);
     },
     
@@ -149,9 +170,9 @@ var Client = class({
         if (login) {
             this.login = login;
             $(this).empty();
-            $(this).append(this.windowContainer = WindowContainer.new());
-            $(this).append(this.tabList = TabList.new(this.windowContainer));
-            $(this).append(MessageForm.new(this));
+            $(this).append(this.windowContainer = WindowContainer.New());
+            $(this).append(this.tabList = TabList.New(this.windowContainer));
+            $(this).append(MessageForm.New(this));
             this.tabList.openTab('foo');
         }
     },
@@ -160,7 +181,6 @@ var Client = class({
 
 
 jQuery(function(){
-    var $ = jQuery;
     
     // // Send form
     //     var sendForm = $('form.send-form');
@@ -176,12 +196,8 @@ jQuery(function(){
     //         $('body').append($('<p>').text(packet));
     //     }
     //     
-    //     $.enableAjaxStream(true);
-    //     function startStream(chan){
-    //         $.get('/chat/' + chan, function(){}, newMessage);
-    //     }
     //     $.ajaxStop(function() { startStream('foo') });
     //     startStream('foo');
     //
-    $('html').append(Client.new());
+    $('html').append(Client.New());
 });

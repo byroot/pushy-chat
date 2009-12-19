@@ -15,9 +15,9 @@ class Message(object):
     
 class Channel(UserDict, object):
 
-    def _last_index(self):
+    def last_index(self):
         return max(chain(self.keys(), [-1]))
 
     def append(self, item):
-        self[self._last_index() + 1] = item
+        self[self.last_index() + 1] = item
 
