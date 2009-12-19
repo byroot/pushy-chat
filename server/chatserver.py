@@ -5,18 +5,19 @@ import os
 import time
 from datetime import datetime
 import socket
-from itertools import chain
+
 from collections import defaultdict
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer, SocketServer
 
+from server.models import Channel, Message
 
 class PushyChatServer(SocketServer.ThreadingMixIn, HTTPServer):
     pass
 
 
 class PushyChatRequestHandler(SimpleHTTPRequestHandler):
-    channels = defaultdict(dict)
+    channels = defaultdict(Channel)
     
     def log_connection_close(self, error): # TODO: nice log
         print 'connection closed by client'
@@ -43,19 +44,12 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         except socket.error, e:
             self.log_connection_close(e)
 
-    def last_index_of(self, chan):
-        return max(chain(self.channels[chan].keys(), [-1]))
-
     def find_new_message(self, chan):
-        return self.channels[chan].get(self.last_check + 1, False)
+        return self.channels[chan].get(self.last_check)
         
     def do_POST(self):
-        self.send_new_message(self.POST['login'], self.POST['chan'], self.POST['message'])
+        self.channels[self.POST['chan']].append(Message(self.POST['login'], self.POST['message']))
         self._redirect_to_root()
-
-    def send_new_message(self, login, chan, message):
-        self.channels[chan][self.last_index_of(chan) + 1] = {'login': login, 'message': message}
-        print self.channels
 
     def _redirect_to_root(self):
         self.send_response(301)
