@@ -1,14 +1,14 @@
-var app = (jQuery(function(){
+(jQuery(function(){
     var $ = jQuery;
     
-    $.ajax({
-        type: 'GET',
-        url: '/chat/foo',
-        dataType: 'text',
-        dataFilter: function(data, type) {
-            document.write(data);
-            return data;
-        },
-        timeout: 20000
-    })
+    function newMessage(packet, status, fulldata, xhr) {
+        $('body').append($('<p>').text(packet));
+    }
+    
+    $.enableAjaxStream(true);
+    function startStream(){
+        $.get('/chat/foo', startStream, newMessage);
+    }   
+    startStream();
+
 }));

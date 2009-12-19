@@ -29,15 +29,17 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-type", 'text/plain')
         self.end_headers()
         
-        message = False
         chan = self.path.split('/')[-1] 
         self.last_check = int(self.GET.get('last_check', self.last_index_of(chan)))
         try:
-            while not message:
+            while True:
                 message = self.find_new_message(chan)
+                if message:
+                    self.wfile.write(unicode(message))
+                    self.wfile.flush()
+                    self.last_check += 1
                 time.sleep(1)
-            
-            self.wfile.write(unicode(message))
+                
         except socket.error, e:
             self.log_connection_close(e)
 
@@ -46,7 +48,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
 
     def find_new_message(self, chan):
         return self.channels[chan].get(self.last_check + 1, False)
-    
+        
     def do_POST(self):
         self.send_new_message(self.POST['login'], self.POST['chan'], self.POST['message'])
         self._redirect_to_root()
