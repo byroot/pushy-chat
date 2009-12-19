@@ -1,3 +1,14 @@
+div {
+    width: 100%;
+}
+
+div.window {
+    position: absolute;
+    border: 3px solid black;
+    height: 75%;
+    line-height: 5px;
+    overflow-y: scroll;
+}
 
 ul {
     list-style-type: none;
@@ -14,33 +25,30 @@ ul.message-list > li {
 ul#tablist {
     padding: 0px;
     margin: 0px;
+    height: 10%;
+    position: absolute;
+    top: 80%;
 }
 
 ul#tablist > li{
     float: left;
     padding: 5px;
-    border: 3px solid;
+    margin: 2px;
+    border: 2px solid;
 }
 
 ul#tablist > li.selected {
     border-color: red;
 }
 
-div.window {
-    border: 3px solid black;
-    height: 400px;
-    line-height: 5px;
-}
-
-div {
-    width: 100%;
-}
-
 div#message-form {
+    position: absolute;
+    top: 90%;
+    height: 10%;
     float: left;
     clear: both;
 }
 
 div#message-form input#message {
-    width: 94%;
+    width: 90%;
 }
