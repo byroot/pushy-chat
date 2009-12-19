@@ -1,6 +1,7 @@
-Function.prototype.bind = function(binding) { // inspired by protoype
+Function.prototype.bind = function() { // inspired by protoype
     var __method = this;
     var __args = jQuery.makeArray(arguments);
+    var binding = __args.shift();
     return function() {
         return __method.apply(binding, __args.concat(jQuery.makeArray(arguments)));
     }
@@ -49,6 +50,7 @@ var WindowContainer = class({
     },
     
     setActiveWindow: function(chan) {
+        this.activeWindow = chan;
         $('#windowcontainer > .window').hide();
         $('#windowcontainer > #window-' + chan).show();
     }
@@ -88,11 +90,32 @@ var TabList = class({
 });
 
 var MessageForm = class({
-    tag: 'form',
+    tag: 'div',
     
-    initialize: function() {
-        
+    initialize: function(parent) {
+        $(this).attr('id', 'message-form');
+        this.parent = parent;
+        this.form = $('<form>');
+        this.messageField = $('<input type="text" name="message">');
+        this.append(this.form.append(this.messageField));
+        this.form.submit(this.send.bind(this));
+    },
+    
+    clear: function(){
+        this.messageField.val('');
+    },
+    
+    send: function(event) {
+        event.preventDefault();
+        console.log(arguments);
+        jQuery.post('/chat/send/', {
+            message: this.messageField.val(),
+            chan: this.parent.windowContainer.activeWindow,
+            login: this.parent.login
+        }, this.clear.bind(this));
+        return false;
     }
+    
 });
 
 var LoginForm = class({
@@ -124,9 +147,11 @@ var Client = class({
     
     connect: function(login){
         if (login) {
+            this.login = login;
             $(this).empty();
             $(this).append(this.windowContainer = WindowContainer.new());
             $(this).append(this.tabList = TabList.new(this.windowContainer));
+            $(this).append(MessageForm.new(this));
             this.tabList.openTab('foo');
         }
     },
