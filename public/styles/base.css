@@ -5,9 +5,20 @@ div {
 div.window {
     position: absolute;
     border: 3px solid black;
+    width: 75%;
     height: 75%;
     line-height: 5px;
     overflow-y: scroll;
+}
+
+div.user-list {
+    position: absolute;
+    border: 3px solid black;
+    left: 75%;
+    width: 20%;
+    height: 75%;
+    line-height: 5px;
+    overflow-y: scroll;    
 }
 
 ul {

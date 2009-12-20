@@ -36,13 +36,7 @@ var ChatWindow = Class({
         this.parent = parent;
         this.chan = chan;
         $(this).addClass('window').attr('id', 'window-' + chan);
-        this.messageList = $('<ul>').addClass('message-list');
-        $(this).append(this.messageList);
-        $(this).hide();
-    },
-    
-    activate: function() {
-        this.parent.setActiveWindow(this.chan);
+        this.messageList = $('<ul>').addClass('message-list').appendTo(this);
     },
     
     appendMessage: function(message) {
@@ -61,11 +55,8 @@ var WindowContainer = Class({
     },
     
     appendWindow: function(chan) {
-        var newWindow = ChatWindow.New(this, chan);
-        this.windows[chan] = newWindow;
-        $(this).append(newWindow);
-        this.setActiveWindow(chan);
-        return newWindow;
+        $(this).append(this.windows[chan] = ChatWindow.New(this, chan));
+        return this.windows[chan];
     },
     
     appendMessage: function(message) {
@@ -80,50 +71,88 @@ var WindowContainer = Class({
     
 });
 
+var UserList = Class({
+    tag: 'ul',
+    
+    initialize: function(parent, chan) {
+        this.attr('id', 'user-list-' + chan).addClass('user-list');
+        this.parent = parent;
+        this.chan = chan;
+    },
+    
+    appendLogin: function(login) {
+        $('<li>').attr('id', 'login-' + login).text(login).appendTo(this);
+    },
+    
+    removeLogin: function(login) {
+        $(this).find('#login-' + login).remove();
+    }
+    
+});
+
+var UserListContainer = Class({
+    tag: 'div',
+    
+    initialize: function(parent) {
+        this.attr('id', 'user-list-container');
+        this.parent = parent;
+        this.lists = {};
+    },
+    
+    appendList: function(chan) {
+        $(this).append(this.lists[chan] = UserList.New(this, chan));
+        return this.lists[chan];
+    },
+    
+    removeList: function(chan) {
+        $(this).find('#user-list-chan').remove();
+    },
+    
+    setActiveList: function(chan) {
+        this.activeWindow = chan;
+        $('#user-list-container > .user-list').hide();
+        $('#user-list-container > #user-list-' + chan).show();
+    }
+    
+});
+
 var Tab = Class({
     tag: 'li',
     
-    initialize: function(parent, chatWindow) {
-        this.chan = chatWindow.chan;
-        this.attr('id', 'tab-' + this.  chan).addClass('tab');
+    initialize: function(parent, chan) {
+        this.attr('id', 'tab-' + chan).addClass('tab');
+        this.chan = chan;
         this.parent = parent;
-        this.window = chatWindow;
-        window.tab = this;
-        $('<a>').text(chatWindow.chan).appendTo(this);
+        $(this).append($('<a>').text(chan));
         $(this).click(this.activate.bind(this));
     },
     
     activate: function() {
-        this.window.activate();
-        this.parent.setActiveTab(this.chan);
+        this.parent.parent.switchTo(this.chan);
     }
 })
 
 var TabList = Class({
     tag: 'ul',
     
-    initialize: function(parent, container) {
+    initialize: function(parent) {
+        $(this).attr('id', 'tablist');
         this.parent = parent;
         this.tabs = {};
-        this.container = container;
-        $(this).attr('id', 'tablist');
-        this.newTabAction = $('<li>').appendTo(this);
-        $('<a>').text('new tab').appendTo(this.newTabAction);
-        this.newTabAction.click(this.askChanName.bind(this));
+        this.newTabAction = $('<li><a>New tab</a></li>').click(this.askChanName.bind(this)).appendTo(this);
     },
     
     askChanName: function(event) {
         this.parent.join(window.prompt('Chan name'));
     },
     
-    openTab: function(chan) {
-        var newWindow = this.container.appendWindow(chan);
-        this.tabs[chan] = this.appendTabFor(newWindow);
-        this.setActiveTab(chan);
+    appendTab: function(chan) {
+        $(this).append(this.tabs[chan] = Tab.New(this, chan));
+        return this.tabs[chan];
     },
     
-    appendTabFor: function(chatWindow) {
-        return Tab.New(this, chatWindow).appendTo(this);       
+    removeTab: function(chan) {
+        $(this).find('#tab-' + chan).remove();
     },
     
     setActiveTab: function(chan) {
@@ -140,10 +169,9 @@ var MessageForm = Class({
     initialize: function(parent) {
         $(this).attr('id', 'message-form');
         this.parent = parent;
-        this.form = $('<form>');
+        this.form = $('<form>').submit(this.send.bind(this));
         this.messageField = $('<input id="message" type="text" name="message">').appendTo(this.form);
         $('<input type="submit">').appendTo(this.form)
-        this.form.submit(this.send.bind(this));
         this.form.appendTo(this);
     },
     
@@ -194,8 +222,15 @@ var Client = Class({
     buildInterface: function() {
         $(this).empty();
         $(this).append(this.windowContainer = WindowContainer.New(this));
-        $(this).append(this.tabList = TabList.New(this, this.windowContainer));
-        $(this).append(this.messageForm = MessageForm.New(this));
+        $(this).append(this.userListContainer = UserListContainer.New(this));
+        $(this).append(this.tabList = TabList.New(this));
+        this.messageForm = MessageForm.New(this).appendTo(this);
+    },
+    
+    switchTo: function(chan) {
+        this.tabList.setActiveTab(chan);
+        this.userListContainer.setActiveList(chan);
+        this.windowContainer.setActiveWindow(chan);
     },
     
     connect: function(login){
@@ -217,7 +252,6 @@ var Client = Class({
     
     parsePackets: function(packet, status, fulldata, xhr) {
         var message = eval(packet);
-        console.log(packet, message);
         if (message) this['handle_' + message.type](message);
     },
     
@@ -229,7 +263,10 @@ var Client = Class({
         jQuery.post('/chat/join?login=' + this.login, {
             chan: chan
         });
-        this.tabList.openTab(chan);
+        this.windowContainer.appendWindow(chan);
+        this.tabList.appendTab(chan);
+        this.userListContainer.appendList(chan);
+        this.switchTo(chan);
     },
     
     quit: function(chan) {
