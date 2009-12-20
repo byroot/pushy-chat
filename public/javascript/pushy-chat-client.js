@@ -39,29 +39,10 @@ var ChatWindow = Class({
         this.messageList = $('<ul>').addClass('message-list');
         $(this).append(this.messageList);
         $(this).hide();
-        this.connect();
     },
     
     activate: function() {
         this.parent.setActiveWindow(this.chan);
-    },
-    
-    connect: function() {
-        var callback = this.parsePackets.bind(this);
-        var chan = this.chan;
-        jQuery.enableAjaxStream(true);
-        function startStream(){
-            jQuery.get('/chat/' + chan, 
-                function(){ setTimeout(startStream, 20)}, 
-                callback
-            );
-        }
-        startStream();
-    },
-    
-    parsePackets: function(packet, status, fulldata, xhr) {
-        var message = eval(packet);
-        if (message) this.appendMessage(message);
     },
     
     appendMessage: function(message) {
@@ -118,7 +99,6 @@ var TabList = Class({
     initialize: function(container) {
         this.container = container;
         $(this).attr('id', 'tablist');
-        this.openTab('master')
     },
     
     openTab: function(chan) {
@@ -158,11 +138,11 @@ var MessageForm = Class({
     
     send: function(event) {
         event.preventDefault();
-        jQuery.post('/chat/send/', {
-            message: this.messageField.val(),
-            chan: this.parent.windowContainer.activeWindow,
-            login: this.parent.login
-        }, this.clear.bind(this));
+        this.parent.send(
+            this.parent.windowContainer.activeWindow,
+            this.messageField.val(), 
+            this.clear.bind(this)
+        );
         return false;
     }
     
@@ -195,17 +175,61 @@ var Client = Class({
         this.loginForm = LoginForm.New(this.connect.bind(this));
         this.append(this.loginForm);
     },
+
+    buildInterface: function() {
+        $(this).empty();
+        $(this).append(this.windowContainer = WindowContainer.New(this));
+        $(this).append(this.tabList = TabList.New(this.windowContainer));
+        $(this).append(this.messageForm = MessageForm.New(this));
+    },
     
     connect: function(login){
         if (login) {
             this.login = login;
-            $(this).empty();
-            $(this).append(this.windowContainer = WindowContainer.New(this));
-            $(this).append(this.tabList = TabList.New(this.windowContainer));
-            $(this).append(MessageForm.New(this));
-            this.tabList.openTab('foo');
+            var callback = this.parsePackets.bind(this);
+            jQuery.enableAjaxStream(true);
+            function startStream(){
+                jQuery.get('/chat/?login=' + login, 
+                    function(){ setTimeout(startStream, 20)}, 
+                    callback
+                );
+            }
+            startStream();
+            this.buildInterface();
+            this.join('master');
         }
     },
+    
+    parsePackets: function(packet, status, fulldata, xhr) {
+        var message = eval(packet);
+        console.log(packet, message);
+        if (message) this['handle_' + message.type](message);
+    },
+    
+    handle_message: function(message) {
+        $('window-' + message.chan).appendMessage(message);
+    },
+    
+    join: function(chan) {
+        jQuery.post('/chat/join?login=' + this.login, {
+            chan: chan
+        });
+        this.tabList.openTab(chan);
+    },
+    
+    quit: function(chan) {
+        jQuery.post('/chat/quit?login=' + this.login, {
+            chan: chan
+        });
+        // TODO: close tab
+    },
+    
+    send: function(chan, body, callback) {
+        jQuery.post('/chat/send?login=' + this.login, {
+            body: body,
+            chan: chan
+        }, callback);
+    }
     
 });
 
