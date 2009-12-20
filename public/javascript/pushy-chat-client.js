@@ -102,10 +102,18 @@ var Tab = Class({
 var TabList = Class({
     tag: 'ul',
     
-    initialize: function(container) {
+    initialize: function(parent, container) {
+        this.parent = parent;
         this.tabs = {};
         this.container = container;
         $(this).attr('id', 'tablist');
+        this.newTabAction = $('<li>').appendTo(this);
+        $('<a>').text('new tab').appendTo(this.newTabAction);
+        this.newTabAction.click(this.askChanName.bind(this));
+    },
+    
+    askChanName: function(event) {
+        this.parent.join(window.prompt('Chan name'));
     },
     
     openTab: function(chan) {
@@ -186,7 +194,7 @@ var Client = Class({
     buildInterface: function() {
         $(this).empty();
         $(this).append(this.windowContainer = WindowContainer.New(this));
-        $(this).append(this.tabList = TabList.New(this.windowContainer));
+        $(this).append(this.tabList = TabList.New(this, this.windowContainer));
         $(this).append(this.messageForm = MessageForm.New(this));
     },
     
