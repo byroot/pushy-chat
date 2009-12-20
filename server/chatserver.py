@@ -51,8 +51,8 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
             self.log_connection_close(e)
 
     def find_new_messages(self):
-        messages = [m for m in self.messages[self.user.last_check - 1:] if m.chan in self.user.channels]
-        self.user.last_check = len(self.messages) - 1
+        messages = [m for m in self.messages[self.user.last_check:] if m.chan in self.user.channels]
+        self.user.last_check = len(self.messages)
         return messages
         
     def do_POST(self):
