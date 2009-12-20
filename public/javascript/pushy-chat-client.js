@@ -55,15 +55,21 @@ var WindowContainer = Class({
     tag: 'div',
     
     initialize: function(parent) {
+        this.windows = {};
         $(this).parent = parent;
         $(this).attr('id', 'windowcontainer');
     },
     
     appendWindow: function(chan) {
         var newWindow = ChatWindow.New(this, chan);
+        this.windows[chan] = newWindow;
         $(this).append(newWindow);
         this.setActiveWindow(chan);
         return newWindow;
+    },
+    
+    appendMessage: function(message) {
+        this.windows[message.chan].appendMessage(message);
     },
     
     setActiveWindow: function(chan) {
@@ -97,18 +103,19 @@ var TabList = Class({
     tag: 'ul',
     
     initialize: function(container) {
+        this.tabs = {};
         this.container = container;
         $(this).attr('id', 'tablist');
     },
     
     openTab: function(chan) {
         var newWindow = this.container.appendWindow(chan);
-        this.appendTabFor(newWindow);
+        this.tabs[chan] = this.appendTabFor(newWindow);
         this.setActiveTab(chan);
     },
     
     appendTabFor: function(chatWindow) {
-        this.append(Tab.New(this, chatWindow));       
+        return Tab.New(this, chatWindow).appendTo(this);       
     },
     
     setActiveTab: function(chan) {
@@ -207,7 +214,7 @@ var Client = Class({
     },
     
     handle_message: function(message) {
-        $('window-' + message.chan).appendMessage(message);
+        this.windowContainer.appendMessage(message);
     },
     
     join: function(chan) {
