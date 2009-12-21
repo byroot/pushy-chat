@@ -13,7 +13,8 @@ from collections import defaultdict
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer, SocketServer
 
-from server.models import Channel, Message, User
+from server.models import Channel, Message, User, UserConnect, UserDisconnect
+
 
 class PushyChatServer(SocketServer.ThreadingMixIn, HTTPServer):
     pass
@@ -42,19 +43,13 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         
         try:
             while True:
-                messages = self.find_new_messages()
-                if messages:
-                    self.wfile.write(u'\n'.join(m.to_json() for m in messages))
+                for message in self.user:
+                    self.wfile.write(message.to_json())
                     self.wfile.flush()
                 time.sleep(1)
                 
         except socket.error, e:
             self.log_connection_close(e)
-
-    def find_new_messages(self):
-        messages = [m for m in self.messages[self.user.last_check:] if m.chan in self.user.channels]
-        self.user.last_check = len(self.messages)
-        return messages
         
     def do_POST(self):
         if not hasattr(self, 'action_%s' % self.action):
@@ -73,16 +68,17 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
     
     def action_send(self):
         chan = self.get_channel(self.POST['chan'])
-        self.messages.append(Message(self.user, chan, self.POST['body']))
+        chan.post_message(self.user, self.POST['body'])
         return True
 
     def action_join(self):
-        print 'JOIN: %s on %s' % (self.user.login, self.POST['chan'])
         chan = self.get_channel(self.POST['chan'])
         self.user.join(chan)
-        print self.user.channels
-        print chan.listeners
         return {'listeners': [u.login for u in chan.listeners]}
+
+    def action_quit(self):
+        self.user.quit(self.get_channel(self.POST['chan']))
+        return True
 
     def get_channel(self, chan_name):
         if not chan_name in self.channels:
@@ -100,7 +96,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
                     return self._user
         
         if not hasattr(self, '_user'):
-            self._user = User(self.GET['login'], offset=len(self.messages) - 1)
+            self._user = User(self.GET['login'], first_connection=True)
             self.users.append(self._user)
         return self._user
     

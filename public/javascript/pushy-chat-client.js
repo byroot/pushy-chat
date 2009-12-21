@@ -251,8 +251,14 @@ var Client = Class({
     },
     
     parsePackets: function(packet, status, fulldata, xhr) {
+        console.log('parsePacket: ', packet);
         var message = eval(packet);
-        if (message) this['handle_' + message.type](message);
+        if (message) {
+            console.log('handle_' + message.type, message);
+            this['handle_' + message.type](message);
+        } else {
+            console.log('invlid packet');
+        }
     },
     
     handle_message: function(message) {
@@ -260,11 +266,13 @@ var Client = Class({
     },
     
     handle_user_connect: function(message) {
-        this.userListContainer.lists[message.chan].appendUser(message.login);
+        console.log('handle_user_connect', message);
+        this.userListContainer.lists[message.chan].appendLogin(message.login);
     },
 
     handle_user_disconnect: function(message) {
-        this.userListContainer.lists[message.chan].removeUser(message.login);
+        console.log('handle_user_disconnect', message);
+        this.userListContainer.lists[message.chan].removeLogin(message.login);
     },
     
     join: function(chan) {
