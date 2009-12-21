@@ -227,15 +227,15 @@ var Client = Class({
     connect: function(login){
         if (login) {
             this.login = login;
-            var callback = _.bind(this.parsePackets, this);
+            var callback = _.bind(this.parsePackets, this), url = this.url('');
             jQuery.enableAjaxStream(true);
+            
             function startStream(){
-                jQuery.get('/chat/?login=' + login, 
-                    function(){ setTimeout(startStream, 20)}, 
-                    callback
-                );
+                var recursive = _.bind(setTimeout, window, startStream, 20);
+                jQuery.get(url, recursive, callback);
             }
             startStream();
+            
             this.buildInterface();
             this.join('master');
         }
@@ -270,15 +270,17 @@ var Client = Class({
         this.userListContainer.lists[message.chan].removeLogin(message.login);
     },
     
+    url: function(action) {
+        return '/chat/' + action + '?login=' + this.login;
+    },
+    
     join: function(chan) {
-        jQuery.post('/chat/join?login=' + this.login, {
-            chan: chan
-        }, _.bind(function(data, textStatus) {
+        var callback = _.bind(function(data, textStatus) {
             var list = this.userListContainer.lists[chan];
-            $(data.listeners).each(function(index, login) {
-                list.appendLogin(login);
-            });
-        }, this), 'json');
+            _(data.listeners).each(function(login) { list.appendLogin(login); });
+        }, this);
+        
+        jQuery.post(this.url('join'), { chan: chan }, callback, 'json');
         this.windowContainer.appendWindow(chan);
         this.tabList.appendTab(chan);
         this.userListContainer.appendList(chan);
@@ -286,17 +288,12 @@ var Client = Class({
     },
     
     quit: function(chan) {
-        jQuery.post('/chat/quit?login=' + this.login, {
-            chan: chan
-        });
+        jQuery.post(this.url(quit), { chan: chan });
         // TODO: close tab
     },
     
     send: function(chan, body, callback) {
-        jQuery.post('/chat/send?login=' + this.login, {
-            body: body,
-            chan: chan
-        }, callback);
+        jQuery.post(this.url('send'), { body: body, chan: chan }, callback);
     }
     
 });
