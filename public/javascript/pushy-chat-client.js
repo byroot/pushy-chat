@@ -83,14 +83,27 @@ var UserList = Class({
         this.attr('id', 'user-list-' + chan).addClass('user-list');
         this.client = client;
         this.chan = chan;
+        this.logins = [];
+    },
+    
+    clean: function() {
+        this.logins = _(this.logins.sort()).uniq(true);
+    },
+    
+    sync: function() {
+        this.clean();
+        $(this).empty();
+        _(this.logins).each(_.bind(function(l) { $(this).append($('<li>').text(l)) }, this));
     },
     
     appendLogin: function(login) {
-        $('<li>').attr('id', 'login-' + login).text(login).appendTo(this);
+        this.logins.push(login);
+        this.sync();
     },
     
     removeLogin: function(login) {
-        $(this).find('#login-' + login).remove();
+        this.logins = this.logins.without(login);
+        this.sync();
     }
     
 });
