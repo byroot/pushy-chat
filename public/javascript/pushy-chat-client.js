@@ -1,4 +1,14 @@
 
+function pushConnect(url, callback) {
+    jQuery.enableAjaxStream(true);
+    function startStream(){
+        var recursive = _.bind(setTimeout, window, startStream, 20);
+        jQuery.get(url, recursive, callback);
+    }
+    startStream();
+}
+
+
 function Class(klass) {
     
     klass.New = function() {
@@ -45,16 +55,20 @@ var WindowContainer = Class({
         $(this).attr('id', 'windowcontainer');
     },
     
-    appendWindow: function(chan) {
+    append: function(chan) {
         $(this).append(this.windows[chan] = ChatWindow.New(this, chan));
         return this.windows[chan];
+    },
+    
+    remove: function(chan) {
+        $(this).find('#window-' + chan).remove()
     },
     
     appendMessage: function(message) {
         this.windows[message.chan].appendMessage(message);
     },
     
-    setActiveWindow: function(chan) {
+    select: function(chan) {
         this.activeWindow = this.windows[chan];
         $('#windowcontainer > .window').hide();
         $('#windowcontainer > #window-' + chan).show();
@@ -90,16 +104,16 @@ var UserListContainer = Class({
         this.lists = {};
     },
     
-    appendList: function(chan) {
+    append: function(chan) {
         $(this).append(this.lists[chan] = UserList.New(this, chan));
         return this.lists[chan];
     },
     
-    removeList: function(chan) {
+    remove: function(chan) {
         $(this).find('#user-list-chan').remove();
     },
     
-    setActiveList: function(chan) {
+    select: function(chan) {
         this.activeList = this.lists[chan];
         $('#user-list-container > .user-list').hide();
         $('#user-list-container > #user-list-' + chan).show();
@@ -116,10 +130,6 @@ var Tab = Class({
         this.parent = parent;
         $(this).append($('<a>').text(chan));
         $(this).click(this.activate);
-    },
-    
-    test: function() {
-        console.log(this);
     },
     
     activate: function() {
@@ -141,17 +151,16 @@ var TabList = Class({
         this.parent.join(window.prompt('Chan name'));
     },
     
-    appendTab: function(chan) {
+    append: function(chan) {
         $(this).append(this.tabs[chan] = Tab.New(this, chan));
         return this.tabs[chan];
     },
     
-    removeTab: function(chan) {
+    remove: function(chan) {
         $(this).find('#tab-' + chan).remove();
     },
     
-    setActiveTab: function(chan) {
-        this.activeTab = this.tabs[chan];
+    select: function(chan) {
         $('#tablist > .tab').removeClass('selected');
         $('#tablist > #tab-' + chan).addClass('selected');        
     }
@@ -177,7 +186,7 @@ var MessageForm = Class({
     send: function(event) {
         event.preventDefault();
         this.parent.send(
-            this.parent.activeChan,
+            this.parent.selectedChan,
             this.messageField.val(), 
             this.clear
         );
@@ -215,32 +224,20 @@ var Client = Class({
     },
 
     buildInterface: function() {
-        $(this).empty();
-        $(this).append(this.windowContainer = WindowContainer.New(this));
-        $(this).append(this.userListContainer = UserListContainer.New(this));
-        $(this).append(this.tabList = TabList.New(this));
-        this.messageForm = MessageForm.New(this).appendTo(this);
-    },
-    
-    switchTo: function(chan) {
-        this.activeChan = chan;
-        this.tabList.setActiveTab(chan);
-        this.userListContainer.setActiveList(chan);
-        this.windowContainer.setActiveWindow(chan);
+        var children = [
+            this.windowContainer = WindowContainer.New(this),
+            this.userListContainer = UserListContainer.New(this),
+            this.tabList = TabList.New(this),
+            this.messageForm = MessageForm.New(this)
+        ];
+        $(this).empty()
+        _.each(children, _.bind(function(c) { $(this).append(c) }, this));
     },
     
     connect: function(login){
         if (login) {
             this.login = login;
-            var callback = this.parsePackets, url = this.url('');
-            jQuery.enableAjaxStream(true);
-            
-            function startStream(){
-                var recursive = _.bind(setTimeout, window, startStream, 20);
-                jQuery.get(url, recursive, callback);
-            }
-            startStream();
-            
+            pushConnect(this.url(), this.parsePackets)           
             this.buildInterface();
             this.join('master');
         }
@@ -274,25 +271,29 @@ var Client = Class({
     },
     
     url: function(action) {
-        return '/chat/' + action + '?login=' + this.login;
+        return '/chat/' + (action || '') + '?login=' + this.login;
+    },
+
+    switchTo: function(chan) {
+        this.selectedChan = chan;
+        _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'select', chan);
     },
     
     join: function(chan) {
+        _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'append', chan);
+        this.switchTo(chan);
+        
+        var list = this.userListContainer.lists[chan];
         var callback = _.bind(function(data, textStatus) {
-            var list = this.userListContainer.lists[chan];
             _(data.listeners).each(function(login) { list.appendLogin(login); });
         }, this);
         
         jQuery.post(this.url('join'), { chan: chan }, callback, 'json');
-        this.windowContainer.appendWindow(chan);
-        this.tabList.appendTab(chan);
-        this.userListContainer.appendList(chan);
-        this.switchTo(chan);
     },
     
     quit: function(chan) {
         jQuery.post(this.url(quit), { chan: chan });
-        // TODO: close tab
+        _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'remove', chan);
     },
     
     send: function(chan, body, callback) {
