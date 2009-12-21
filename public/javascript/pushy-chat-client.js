@@ -1,13 +1,3 @@
-var $ = jQuery;
-
-Function.prototype.bind = function() { // inspired by protoype
-    var __method = this;
-    var __args = jQuery.makeArray(arguments);
-    var binding = __args.shift();
-    return function() {
-        return __method.apply(binding, __args.concat(jQuery.makeArray(arguments)));
-    }
-}
 
 function Class(klass) {
     
@@ -124,7 +114,7 @@ var Tab = Class({
         this.chan = chan;
         this.parent = parent;
         $(this).append($('<a>').text(chan));
-        $(this).click(this.activate.bind(this));
+        $(this).click(_.bind(this.activate, this));
     },
     
     activate: function() {
@@ -139,7 +129,7 @@ var TabList = Class({
         $(this).attr('id', 'tablist');
         this.parent = parent;
         this.tabs = {};
-        this.newTabAction = $('<li><a>New tab</a></li>').click(this.askChanName.bind(this)).appendTo(this);
+        this.newTabAction = $('<li><a>New tab</a></li>').click(_.bind(this.askChanName, this)).appendTo(this);
     },
     
     askChanName: function(event) {
@@ -169,7 +159,7 @@ var MessageForm = Class({
     initialize: function(parent) {
         $(this).attr('id', 'message-form');
         this.parent = parent;
-        this.form = $('<form>').submit(this.send.bind(this));
+        this.form = $('<form>').submit(_.bind(this.send, this));
         this.messageField = $('<input id="message" type="text" name="message">').appendTo(this.form);
         $('<input type="submit">').appendTo(this.form)
         this.form.appendTo(this);
@@ -184,7 +174,7 @@ var MessageForm = Class({
         this.parent.send(
             this.parent.activeChan,
             this.messageField.val(), 
-            this.clear.bind(this)
+            _.bind(this.clear, this)
         );
         return false;
     }
@@ -215,7 +205,7 @@ var Client = Class({
     },
     
     askLogin: function() {
-        this.loginForm = LoginForm.New(this.connect.bind(this));
+        this.loginForm = LoginForm.New(_.bind(this.connect, this));
         this.append(this.loginForm);
     },
 
@@ -237,7 +227,7 @@ var Client = Class({
     connect: function(login){
         if (login) {
             this.login = login;
-            var callback = this.parsePackets.bind(this);
+            var callback = _.bind(this.parsePackets, this);
             jQuery.enableAjaxStream(true);
             function startStream(){
                 jQuery.get('/chat/?login=' + login, 
@@ -255,11 +245,11 @@ var Client = Class({
         try{
             packet = eval(packet);            
             if (packet && packet.messages) {
-                $(packet.messages).each(function(index, message) {
+                $(packet.messages).each(_.bind(function(index, message) {
                     console.log('handle_' + message.type, message);
                     this['handle_' + message.type](message);
                     return true;
-                }.bind(this));
+                }, this));
             }
         } catch(e) {
             console.log('invalid packet: ', packet);            
@@ -283,12 +273,12 @@ var Client = Class({
     join: function(chan) {
         jQuery.post('/chat/join?login=' + this.login, {
             chan: chan
-        }, function(data, textStatus) {
+        }, _.bind(function(data, textStatus) {
             var list = this.userListContainer.lists[chan];
             $(data.listeners).each(function(index, login) {
                 list.appendLogin(login);
             });
-        }.bind(this), 'json');
+        }, this), 'json');
         this.windowContainer.appendWindow(chan);
         this.tabList.appendTab(chan);
         this.userListContainer.appendList(chan);
