@@ -33,8 +33,8 @@ var Message = Class({
 var ChatWindow = Class({
     tag: 'div',
     
-    initialize: function(parent, chan) {
-        this.parent = parent;
+    initialize: function(client, chan) {
+        this.client = client;
         this.chan = chan;
         $(this).addClass('window').attr('id', 'window-' + chan);
         this.messageList = $('<ul>').addClass('message-list').appendTo(this);
@@ -49,9 +49,9 @@ var ChatWindow = Class({
 var WindowContainer = Class({
     tag: 'div',
     
-    initialize: function(parent) {
+    initialize: function(client) {
         this.windows = {};
-        $(this).parent = parent;
+        $(this).client = client;
         $(this).attr('id', 'windowcontainer');
     },
     
@@ -79,9 +79,9 @@ var WindowContainer = Class({
 var UserList = Class({
     tag: 'ul',
     
-    initialize: function(parent, chan) {
+    initialize: function(client, chan) {
         this.attr('id', 'user-list-' + chan).addClass('user-list');
-        this.parent = parent;
+        this.client = client;
         this.chan = chan;
     },
     
@@ -98,9 +98,9 @@ var UserList = Class({
 var UserListContainer = Class({
     tag: 'div',
     
-    initialize: function(parent) {
+    initialize: function(client) {
         this.attr('id', 'user-list-container');
-        this.parent = parent;
+        this.client = client;
         this.lists = {};
     },
     
@@ -124,35 +124,35 @@ var UserListContainer = Class({
 var Tab = Class({
     tag: 'li',
     
-    initialize: function(parent, chan) {
+    initialize: function(client, chan) {
         this.attr('id', 'tab-' + chan).addClass('tab');
         this.chan = chan;
-        this.parent = parent;
+        this.client = client;
         $(this).append($('<a>').text(chan));
         $(this).click(this.activate);
     },
     
     activate: function() {
-        this.parent.parent.switchTo(this.chan);
+        this.client.switchTo(this.chan);
     }
 })
 
 var TabList = Class({
     tag: 'ul',
     
-    initialize: function(parent) {
+    initialize: function(client) {
         $(this).attr('id', 'tablist');
-        this.parent = parent;
+        this.client = client;
         this.tabs = {};
         this.newTabAction = $('<li><a>New tab</a></li>').click(this.askChanName).appendTo(this);
     },
     
     askChanName: function(event) {
-        this.parent.join(window.prompt('Chan name'));
+        this.client.join(window.prompt('Chan name'));
     },
     
     append: function(chan) {
-        $(this).append(this.tabs[chan] = Tab.New(this, chan));
+        $(this).append(this.tabs[chan] = Tab.New(this.client, chan));
         return this.tabs[chan];
     },
     
@@ -170,9 +170,9 @@ var TabList = Class({
 var MessageForm = Class({
     tag: 'div',
     
-    initialize: function(parent) {
+    initialize: function(client) {
         $(this).attr('id', 'message-form');
-        this.parent = parent;
+        this.client = client;
         this.form = $('<form>').submit(this.send);
         this.messageField = $('<input id="message" type="text" name="message">').appendTo(this.form);
         $('<input type="submit">').appendTo(this.form)
@@ -185,8 +185,8 @@ var MessageForm = Class({
     
     send: function(event) {
         event.preventDefault();
-        this.parent.send(
-            this.parent.selectedChan,
+        this.client.send(
+            this.client.selectedChan,
             this.messageField.val(), 
             this.clear
         );
