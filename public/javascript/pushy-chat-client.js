@@ -3,6 +3,7 @@ function Class(klass) {
     
     klass.New = function() {
         var self = $.extend($('<' + klass.tag + '>'), klass)
+        _.bindAll(self);
         self.initialize.apply(self, arguments);
         return self;
     };
@@ -114,7 +115,11 @@ var Tab = Class({
         this.chan = chan;
         this.parent = parent;
         $(this).append($('<a>').text(chan));
-        $(this).click(_.bind(this.activate, this));
+        $(this).click(this.activate);
+    },
+    
+    test: function() {
+        console.log(this);
     },
     
     activate: function() {
@@ -129,7 +134,7 @@ var TabList = Class({
         $(this).attr('id', 'tablist');
         this.parent = parent;
         this.tabs = {};
-        this.newTabAction = $('<li><a>New tab</a></li>').click(_.bind(this.askChanName, this)).appendTo(this);
+        this.newTabAction = $('<li><a>New tab</a></li>').click(this.askChanName).appendTo(this);
     },
     
     askChanName: function(event) {
@@ -159,7 +164,7 @@ var MessageForm = Class({
     initialize: function(parent) {
         $(this).attr('id', 'message-form');
         this.parent = parent;
-        this.form = $('<form>').submit(_.bind(this.send, this));
+        this.form = $('<form>').submit(this.send);
         this.messageField = $('<input id="message" type="text" name="message">').appendTo(this.form);
         $('<input type="submit">').appendTo(this.form)
         this.form.appendTo(this);
@@ -174,7 +179,7 @@ var MessageForm = Class({
         this.parent.send(
             this.parent.activeChan,
             this.messageField.val(), 
-            _.bind(this.clear, this)
+            this.clear
         );
         return false;
     }
@@ -205,7 +210,7 @@ var Client = Class({
     },
     
     askLogin: function() {
-        this.loginForm = LoginForm.New(_.bind(this.connect, this));
+        this.loginForm = LoginForm.New(this.connect, this);
         this.append(this.loginForm);
     },
 
@@ -227,7 +232,7 @@ var Client = Class({
     connect: function(login){
         if (login) {
             this.login = login;
-            var callback = _.bind(this.parsePackets, this), url = this.url('');
+            var callback = this.parsePackets, url = this.url('');
             jQuery.enableAjaxStream(true);
             
             function startStream(){
@@ -245,10 +250,8 @@ var Client = Class({
         try{
             packet = eval(packet);            
             if (packet && packet.messages) {
-                $(packet.messages).each(_.bind(function(index, message) {
-                    console.log('handle_' + message.type, message);
+                _(packet.messages).each(_.bind(function(message) {
                     this['handle_' + message.type](message);
-                    return true;
                 }, this));
             }
         } catch(e) {
