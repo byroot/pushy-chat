@@ -3,6 +3,7 @@
 
 import os
 import time
+import json
 from datetime import datetime
 import socket
 import urllib
@@ -60,11 +61,15 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
         else:
-            if getattr(self, 'action_%s' % self.action)():
+            response = getattr(self, 'action_%s' % self.action)()
+            if response:
                 self.send_response(200)
             else:
                 self.send_response(304)
             self.end_headers()
+            if isinstance(response, dict):
+                self.wfile.write(json.dumps(response))
+            
     
     def action_send(self):
         chan = self.get_channel(self.POST['chan'])
@@ -77,7 +82,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         self.user.join(chan)
         print self.user.channels
         print chan.listeners
-        return True
+        return {'listeners': [u.login for u in chan.listeners]}
 
     def get_channel(self, chan_name):
         if not chan_name in self.channels:

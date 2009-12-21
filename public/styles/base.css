@@ -11,14 +11,22 @@ div.window {
     overflow-y: scroll;
 }
 
-div.user-list {
+ul.user-list {
+    margin: 0px;
+    padding-left: 8px;
     position: absolute;
     border: 3px solid black;
-    left: 75%;
+    left: 76%;
     width: 20%;
     height: 75%;
     line-height: 5px;
     overflow-y: scroll;    
+}
+
+
+ul.user-list > li {
+    padding-left: 2px;
+    padding-top: 8px;
 }
 
 ul {

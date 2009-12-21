@@ -64,7 +64,7 @@ var WindowContainer = Class({
     },
     
     setActiveWindow: function(chan) {
-        this.activeWindow = chan;
+        this.activeWindow = this.windows[chan];
         $('#windowcontainer > .window').hide();
         $('#windowcontainer > #window-' + chan).show();
     }
@@ -109,7 +109,7 @@ var UserListContainer = Class({
     },
     
     setActiveList: function(chan) {
-        this.activeWindow = chan;
+        this.activeList = this.lists[chan];
         $('#user-list-container > .user-list').hide();
         $('#user-list-container > #user-list-' + chan).show();
     }
@@ -156,7 +156,7 @@ var TabList = Class({
     },
     
     setActiveTab: function(chan) {
-        this.activeTab = chan;
+        this.activeTab = this.tabs[chan];
         $('#tablist > .tab').removeClass('selected');
         $('#tablist > #tab-' + chan).addClass('selected');        
     }
@@ -259,10 +259,23 @@ var Client = Class({
         this.windowContainer.appendMessage(message);
     },
     
+    handle_user_connect: function(message) {
+        this.userListContainer.lists[message.chan].appendUser(message.login);
+    },
+
+    handle_user_disconnect: function(message) {
+        this.userListContainer.lists[message.chan].removeUser(message.login);
+    },
+    
     join: function(chan) {
         jQuery.post('/chat/join?login=' + this.login, {
             chan: chan
-        });
+        }, function(data, textStatus) {
+            var list = this.userListContainer.lists[chan];
+            $(data.listeners).each(function(index, login) {
+                list.appendLogin(login);
+            });
+        }.bind(this), 'json');
         this.windowContainer.appendWindow(chan);
         this.tabList.appendTab(chan);
         this.userListContainer.appendList(chan);
