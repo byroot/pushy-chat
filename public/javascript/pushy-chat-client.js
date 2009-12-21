@@ -237,7 +237,7 @@ var Client = Class({
     connect: function(login){
         if (login) {
             this.login = login;
-            pushConnect(this.url(), this.parsePackets)           
+            pushConnect(this.url(), this.parsePackets)
             this.buildInterface();
             this.join('master');
         }
@@ -245,14 +245,16 @@ var Client = Class({
     
     parsePackets: function(packet, status, fulldata, xhr) {
         try{
-            packet = eval(packet);            
-            if (packet && packet.messages) {
-                _(packet.messages).each(_.bind(function(message) {
-                    this['handle_' + message.type](message);
-                }, this));
-            }
+            _(packet.match(/\(\{[^\)]*\}\)/g)).each(_.bind(function(json) {
+                packet = eval(json);
+                if (packet && packet.messages) {
+                    _(packet.messages).each(_.bind(function(message) {
+                        this['handle_' + message.type](message);
+                    }, this));
+                }
+            }, this));
         } catch(e) {
-            console.log('invalid packet: ', packet);            
+            console.log('invalid packet: ', packet);
         }
     },
     
