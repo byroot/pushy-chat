@@ -23,7 +23,21 @@ class PushyChatServer(SocketServer.ThreadingMixIn, HTTPServer):
 class PushyChatRequestHandler(SimpleHTTPRequestHandler):
     channels = {}
     users = []
-    messages = []
+    
+    @classmethod
+    def purge_loop(cls):
+        print '- start purge loop'
+        while True:
+            time.sleep(5)
+            trash = [u for u in cls.users if u.last_checkout > 20]
+            for user in trash:
+                cls.users.remove(user)
+                user.destroy()
+                'DISCONNECT: %s' % user.login
+            del trash
+            
+            for chan in [c.name for c in cls.channels.values() if not len(c.listeners)]:
+                del cls.channels[chan]
     
     def log_connection_close(self, error): # TODO: nice log
         print 'connection closed by client'
@@ -43,9 +57,10 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         
         try:
             while True:
-                for message in self.user:
-                    self.wfile.write(message.to_json())
-                    self.wfile.flush()
+                packet = {'messages': list(self.user)}
+                self.wfile.write(u'(%s)' % json.dumps(packet))
+                self.wfile.flush()                    
+                self.user.last_checkout_at = time.time()
                 time.sleep(1)
                 
         except socket.error, e:

@@ -1,6 +1,5 @@
 features:
   - User cookie
-  - User purge
   - Quit chan UI
   - Private chans
 

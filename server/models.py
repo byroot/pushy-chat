@@ -2,6 +2,7 @@
 
 import json
 import hashlib
+import time
 from itertools import chain
 from UserDict import UserDict
 
@@ -11,11 +12,9 @@ def lowercase(string):
 
 
 class Event(object):
-    
-    def to_json(self):
-        dic = self._to_dict()
-        dic['type'] = lowercase(self.__class__.__name__)
-        return u'(%s)' % json.dumps(dic)
+
+    def get_type(self):
+        return lowercase(self.__class__.__name__)
 
 
 class UserEvent(Event):
@@ -25,7 +24,11 @@ class UserEvent(Event):
         self.chan = chan
     
     def _to_dict(self):
-        return {'login': self.user.login, 'chan': self.chan.name}
+        return {
+            'type': self.get_type(),
+            'login': self.user.login, 
+            'chan': self.chan.name
+        }
 
 
 class UserDisconnect(UserEvent):
@@ -51,6 +54,7 @@ class Message(Event):
 
     def _to_dict(self):
         return {
+            'type': self.get_type(),
             'login': self.user.login, 
             'body': self.body,
             'chan': self.chan.name
@@ -86,9 +90,14 @@ class User(object):
     
     def __init__(self, login, first_connection=False):
         self.first_connection = first_connection
+        self.last_checkout_at = time.time()
         self.queue = []
         self.login = login
         self.channels = set()
+    
+    @property
+    def last_checkout(self):
+        return int(time.time() - self.last_checkout_at)
     
     def join(self, chan):
         chan.add_listener(self)
@@ -102,12 +111,16 @@ class User(object):
     def __iter__(self):
         try:
             while True:
-                yield self.queue.pop()
+                yield self.queue.pop()._to_dict()
         except IndexError:
             pass
     
     def __repr__(self):
-        return '<User: %s>' % self.login
+        return '<User: login=%s last_checkout=%s>' % (repr(self.login), self.last_checkout)
+    
+    def destroy(self):
+        for chan in self.channels:
+            self.quit(chan)
     
     @classmethod
     def generate_uid():

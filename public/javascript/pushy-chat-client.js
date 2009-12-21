@@ -182,7 +182,7 @@ var MessageForm = Class({
     send: function(event) {
         event.preventDefault();
         this.parent.send(
-            this.parent.windowContainer.activeWindow,
+            this.parent.activeChan,
             this.messageField.val(), 
             this.clear.bind(this)
         );
@@ -228,6 +228,7 @@ var Client = Class({
     },
     
     switchTo: function(chan) {
+        this.activeChan = chan;
         this.tabList.setActiveTab(chan);
         this.userListContainer.setActiveList(chan);
         this.windowContainer.setActiveWindow(chan);
@@ -251,13 +252,17 @@ var Client = Class({
     },
     
     parsePackets: function(packet, status, fulldata, xhr) {
-        console.log('parsePacket: ', packet);
-        var message = eval(packet);
-        if (message) {
-            console.log('handle_' + message.type, message);
-            this['handle_' + message.type](message);
-        } else {
-            console.log('invlid packet');
+        try{
+            packet = eval(packet);            
+            if (packet && packet.messages) {
+                $(packet.messages).each(function(index, message) {
+                    console.log('handle_' + message.type, message);
+                    this['handle_' + message.type](message);
+                    return true;
+                }.bind(this));
+            }
+        } catch(e) {
+            console.log('invalid packet: ', packet);            
         }
     },
     
