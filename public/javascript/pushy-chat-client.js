@@ -52,7 +52,7 @@ var WindowContainer = Class({
     initialize: function(client) {
         this.windows = {};
         $(this).client = client;
-        $(this).attr('id', 'windowcontainer');
+        $(this).attr('id', 'window-container');
     },
     
     append: function(chan) {
@@ -70,8 +70,8 @@ var WindowContainer = Class({
     
     select: function(chan) {
         this.activeWindow = this.windows[chan];
-        $('#windowcontainer > .window').hide();
-        $('#windowcontainer > #window-' + chan).show();
+        $('#window-container > .window').hide();
+        $('#window-container > #window-' + chan).show();
     }
     
 });
@@ -123,7 +123,7 @@ var UserListContainer = Class({
     },
     
     remove: function(chan) {
-        $(this).find('#user-list-chan').remove();
+        $(this).find('#user-list-' + chan).remove();
     },
     
     select: function(chan) {
@@ -141,7 +141,7 @@ var Tab = Class({
         this.attr('id', 'tab-' + chan).addClass('tab');
         this.chan = chan;
         this.client = client;
-        $(this).append($('<a>').text(chan));
+        $(this).append($('<button>').text(chan));
         $(this).click(this.activate);
     },
     
@@ -157,7 +157,17 @@ var TabList = Class({
         $(this).attr('id', 'tablist');
         this.client = client;
         this.tabs = {};
-        this.newTabAction = $('<li><a>New tab</a></li>').click(this.askChanName).appendTo(this);
+        var item = function(label) { 
+            var tpl = _.template('<li id="<%= id %>"><button><%= label %></button></li>');
+            return tpl({ label: label, id: label.replace(' ', '-').toLowerCase() });
+        };
+        this.newTabAction = $(item('New tab')).click(this.askChanName).appendTo(this);
+        this.closeTabAction = $(item('Close tab')).click(this.closeTab).appendTo(this);
+
+    },
+    
+    closeTab: function(event) {
+        this.client.quit(this.client.selectedChan);
     },
     
     askChanName: function(event) {
@@ -165,11 +175,13 @@ var TabList = Class({
     },
     
     append: function(chan) {
-        $(this).append(this.tabs[chan] = Tab.New(this.client, chan));
+        $(this).find('#close-tab').before(this.tabs[chan] = Tab.New(this.client, chan));
         return this.tabs[chan];
     },
     
     remove: function(chan) {
+        var tab = $(this).find('.tab.selected');
+        this.client.switchTo(tab.prev('.tab').text() || tab.next('.tab').text());
         $(this).find('#tab-' + chan).remove();
     },
     
@@ -194,6 +206,14 @@ var MessageForm = Class({
     
     clear: function(){
         this.messageField.val('');
+    },
+    
+    disable: function() {
+        this.find('input').attr('disabled', 'disabled');
+    },
+    
+    enable: function() {
+        this.find('input').attr('disabled', '');
     },
     
     send: function(event) {
@@ -291,7 +311,12 @@ var Client = Class({
 
     switchTo: function(chan) {
         this.selectedChan = chan;
-        _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'select', chan);
+        if (chan) {
+            this.messageForm.enable();
+            _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'select', chan);
+        } else {
+            this.messageForm.disable();
+        }
     },
     
     join: function(chan) {
@@ -307,7 +332,7 @@ var Client = Class({
     },
     
     quit: function(chan) {
-        jQuery.post(this.url(quit), { chan: chan });
+        jQuery.post(this.url('quit'), { chan: chan });
         _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'remove', chan);
     },
     
