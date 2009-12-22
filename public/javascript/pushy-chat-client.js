@@ -1,9 +1,19 @@
 
 function pushConnect(url, callback) {
+    function parsePackets(packet, status, fulldata, xhr) {
+        _(packet.match(/\(\{[^\)]*\}\)/g)).each(function(json) {
+            try{
+                callback(eval(json));
+            } catch(e) {
+                console.log('invalid packet: ', packet);
+            }
+        });
+    }
+    
     jQuery.enableAjaxStream(true);
     function startStream(){
         var recursive = _.bind(setTimeout, window, startStream, 20);
-        jQuery.get(url, recursive, callback);
+        jQuery.get(url, recursive, parsePackets);
     }
     startStream();
 }
@@ -270,25 +280,14 @@ var Client = Class({
     connect: function(login){
         if (login) {
             this.login = login;
-            pushConnect(this.url(), this.parsePackets)
+            pushConnect(this.url(), this.dispatchPacket)
             this.buildInterface();
             this.join('master');
         }
     },
-    
-    parsePackets: function(packet, status, fulldata, xhr) {
-        try{
-            _(packet.match(/\(\{[^\)]*\}\)/g)).each(_.bind(function(json) {
-                packet = eval(json);
-                if (packet && packet.messages) {
-                    _(packet.messages).each(_.bind(function(message) {
-                        this['handle_' + message.type](message);
-                    }, this));
-                }
-            }, this));
-        } catch(e) {
-            console.log('invalid packet: ', packet);
-        }
+        
+    dispatchPacket: function(packet) {
+        this['handle_' + packet.type](packet);        
     },
     
     handle_message: function(message) {

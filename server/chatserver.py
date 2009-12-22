@@ -57,8 +57,8 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         
         try:
             while True:
-                packet = {'messages': list(self.user)}
-                self.wfile.write(u'(%s)' % json.dumps(packet))
+                for packet in self.user:
+                    self.wfile.write(u'(%s)' % json.dumps(packet))
                 self.wfile.flush()                    
                 self.user.last_checkout_at = time.time()
                 time.sleep(1)
