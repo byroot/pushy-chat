@@ -61,7 +61,7 @@ var WindowContainer = Class({
     
     initialize: function(client) {
         this.windows = {};
-        $(this).client = client;
+        this.client = client;
         $(this).attr('id', 'window-container');
     },
     
@@ -295,12 +295,10 @@ var Client = Class({
     },
     
     handle_user_connect: function(message) {
-        console.log('handle_user_connect', message);
         this.userListContainer.lists[message.chan].appendLogin(message.login);
     },
 
     handle_user_disconnect: function(message) {
-        console.log('handle_user_disconnect', message);
         this.userListContainer.lists[message.chan].removeLogin(message.login);
     },
     
