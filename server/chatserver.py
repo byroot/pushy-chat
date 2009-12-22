@@ -21,6 +21,7 @@ class PushyChatServer(SocketServer.ThreadingMixIn, HTTPServer):
 
 
 class PushyChatRequestHandler(SimpleHTTPRequestHandler):
+    server_version = 'PushyChat/0.1'
     channels = {}
     users = []
     
