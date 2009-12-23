@@ -1,7 +1,3 @@
-div {
-    width: 99%;
-    background-color: white;
-}
 
 div#window-container {
     position: absolute;
@@ -18,6 +14,7 @@ div.window {
     line-height: 5px;
     overflow-y: scroll;
     z-index: 10;
+    background-color: white;
 }
 
 div#user-list-container {
@@ -85,6 +82,7 @@ div#message-form {
     position: absolute;
     top: 90%;
     height: 10%;
+    width: 99%;
     float: left;
     clear: both;
 }

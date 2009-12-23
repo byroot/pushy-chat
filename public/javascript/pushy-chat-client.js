@@ -181,7 +181,18 @@ var TabList = Class({
     },
     
     askChanName: function(event) {
-        this.client.join(window.prompt('Chan name'));
+        var client = this.client;
+        var form = $('<form>').submit(function(event) {
+            event.preventDefault();
+            client.join($(this).find(':input[name=chan]').val());
+            $(this).parent('div').dialog('close');
+            return false;
+        });
+        form.append($('<p><input name="chan" type="text"/></p>'));
+        form.append($('<p><input type="submit"></p>'));
+        
+        $.ui.dialog.defaults.bgiframe = true;
+        $('<div title="Chan name">').append(form).dialog();
     },
     
     append: function(chan) {
@@ -317,6 +328,7 @@ var Client = Class({
     },
     
     join: function(chan) {
+        if (!chan) return;
         _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'append', chan);
         this.switchTo(chan);
         
