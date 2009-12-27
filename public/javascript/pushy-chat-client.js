@@ -127,6 +127,10 @@ var UserListContainer = Class({
         this.lists = {};
     },
     
+    getCurrentLogins: function() {
+      return _.clone(this.activeList.logins);
+    },
+    
     append: function(chan) {
         $(this).append(this.lists[chan] = UserList.New(this, chan));
         return this.lists[chan];
@@ -219,10 +223,34 @@ var MessageForm = Class({
     initialize: function(client) {
         $(this).attr('id', 'message-form');
         this.client = client;
-        this.form = $('<form>').submit(this.send);
+        this.form = $('<form>').submit(this.send).keypress(this.complete);
         this.messageField = $('<input id="message" type="text" name="message">').appendTo(this.form);
         $('<input type="submit">').appendTo(this.form)
         this.form.appendTo(this);
+    },
+    
+    complete: function(event) {
+        if (event.keyCode != 9) return true;
+        
+        var content = this.messageField.val();
+        var isFirstWord = !content.match(/ /);
+        var toComplete = content.split(/ /).pop();
+        var loginList = this.client.userListContainer.getCurrentLogins();
+        var mask = RegExp('^' + toComplete);
+        
+        var matchingLogins = _(loginList).select(function(l) { return !!l.match(mask); });
+        if (_(matchingLogins).isEmpty()) return false;
+        
+        if (matchingLogins.length == 1) {
+            var replacement = matchingLogins.pop() + (isFirstWord ? ': ' : ' ');
+        } else {
+            var replacement = _(_.zip.apply(null,matchingLogins)).chain()
+                .map(_.uniq).reject(function(i) { return this.endReached |= i.length > 1 }, {endReached: false})
+                .flatten().join('').value();
+        }
+        this.messageField.val(content.replace(toComplete, replacement));
+        
+        return false;
     },
     
     clear: function(){
