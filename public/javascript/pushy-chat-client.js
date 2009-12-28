@@ -244,8 +244,8 @@ var MessageForm = Class({
         if (matchingLogins.length == 1) {
             var replacement = matchingLogins.pop() + (isFirstWord ? ': ' : ' ');
         } else {
-            var replacement = _(_.zip.apply(null,matchingLogins)).chain()
-                .map(_.uniq).reject(function(i) { return this.endReached |= i.length > 1 }, {endReached: false})
+            var replacement = _(_.zip.apply(null,matchingLogins)).chain().map(_.uniq)
+                .reject(function(i) { return this.endReached |= i.length > 1 }, {})
                 .flatten().join('').value();
         }
         this.messageField.val(content.replace(toComplete, replacement));
