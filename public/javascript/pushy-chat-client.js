@@ -1,7 +1,7 @@
 
 function pushConnect(url, callback) {
     function parsePackets(packet, status, fulldata, xhr) {
-        _(packet.match(/\(\{[^\)]*\}\)/g)).each(function(json) {
+        _(packet.match(/\(\{[^\)]*\}\)/g)).chain().toArray().each(function(json) {
             try{
                 callback(eval(json));
             } catch(e) {
@@ -319,14 +319,17 @@ var Client = Class({
     connect: function(login){
         if (login) {
             this.login = login;
-            pushConnect(this.url(), this.dispatchPacket)
+            pushConnect(this.url('?login=' + login), this.dispatchPacket)
             this.buildInterface();
-            this.join('master');
         }
     },
         
     dispatchPacket: function(packet) {
         this['handle_' + packet.type](packet);        
+    },
+    
+    handle_cookie: function(message) {
+        document.cookie = _.template('<%= name %>=<%= escape(value) %>;')(message);
     },
     
     handle_message: function(message) {
@@ -342,7 +345,7 @@ var Client = Class({
     },
     
     url: function(action) {
-        return '/chat/' + (action || '') + '?login=' + this.login;
+        return '/chat/' + (action || '');
     },
 
     switchTo: function(chan) {

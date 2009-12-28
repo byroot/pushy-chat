@@ -89,12 +89,19 @@ class Channel(object):
 class User(object):
     
     def __init__(self, login, first_connection=False):
+        self.session_id = self.hash(login)
         self.first_connection = first_connection
         self.last_checkout_at = time.time()
         self.queue = []
         self.login = login
         self.channels = set()
     
+    @staticmethod
+    def hash(string):
+        salt = hashlib.sha1("C'est tout ce que ça te fait quand je te dit"\
+        " qu'on va manger des chips ?").hexdigest()
+        return hashlib.sha1(str(time.time()) + string + salt).hexdigest()
+        
     @property
     def last_checkout(self):
         return int(time.time() - self.last_checkout_at)
