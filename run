@@ -11,6 +11,7 @@ if __name__ == '__main__':
     print '- serve content of: %s' % PUBLIC_DIRECTORY
     os.chdir(PUBLIC_DIRECTORY)
     purge_loop = threading.Thread(target=PushyChatRequestHandler.purge_loop)
+    purge_loop.daemon = True
     purge_loop.start()
     server = PushyChatServer(('', 8000), PushyChatRequestHandler)
     server.serve_forever()

@@ -18,7 +18,7 @@ from server.models import Channel, Message, User, UserConnect, UserDisconnect
 
 
 class PushyChatServer(SocketServer.ThreadingMixIn, HTTPServer):
-    pass
+    daemon_threads = True
 
 
 class PushyChatRequestHandler(SimpleHTTPRequestHandler):
