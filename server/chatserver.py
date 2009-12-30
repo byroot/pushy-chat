@@ -79,12 +79,12 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
         else:
-            try:
-                response = getattr(self, 'action_%s' % self.action)()
-            except Exception, exc:
-                self.send_response(500)
-                self.end_headers()
-                raise exc
+            #try:
+            response = getattr(self, 'action_%s' % self.action)()
+            # except Exception, exc:
+            #     self.send_response(500)
+            #     self.end_headers()
+            #     raise exc
 
             if not isinstance(response, dict):
                 self.send_response(200 if response else 304)

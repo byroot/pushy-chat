@@ -3,62 +3,7 @@
 import hashlib
 import time
 
-
-def lowercase(string):
-    return string[0].lower() + u''.join(
-        c if c.islower() else '_%c' % c.lower() for c in string[1:])
-
-
-class Event(object):
-
-    def get_type(self):
-        return lowercase(self.__class__.__name__)
-
-
-class UserEvent(Event):
-
-    def __init__(self, user, chan):
-        super(UserEvent, self).__init__()
-        self.user = user
-        self.chan = chan
-
-    def _to_dict(self):
-        return {
-            'type': self.get_type(),
-            'login': self.user.login,
-            'chan': self.chan.name
-        }
-
-
-class UserDisconnect(UserEvent):
-    pass
-
-
-class UserConnect(UserEvent):
-    pass
-
-
-class Message(Event):
-
-    def __init__(self, user, chan, body):
-        super(Message, self).__init__()
-        self.user = user
-        self.chan = chan
-        self.body = body
-
-    def __unicode__(self):
-        return u'%s: %s: %s' % (self.chan.name, self.user.login, self.body)
-
-    def __repr__(self):
-        return unicode(self)
-
-    def _to_dict(self):
-        return {
-            'type': self.get_type(),
-            'login': self.user.login,
-            'body': self.body,
-            'chan': self.chan.name
-        }
+from server.events import Message, UserConnect, UserDisconnect
 
 
 class Channel(object):
@@ -122,7 +67,7 @@ class User(object):
     def __iter__(self):
         try:
             while True:
-                yield self.queue.pop()._to_dict()
+                yield self.queue.pop().to_dict()
         except IndexError:
             pass
 
