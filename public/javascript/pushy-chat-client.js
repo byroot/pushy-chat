@@ -196,7 +196,7 @@ var TabList = Class({
         form.append($('<p><input type="submit"></p>'));
         
         $.ui.dialog.defaults.bgiframe = true;
-        $('<div title="Chan name">').append(form).dialog();
+        $('<div title="Chan name">').append(form).dialog().find(':input[name=chan]').focus();
     },
     
     append: function(chan) {
@@ -253,7 +253,11 @@ var MessageForm = Class({
         return false;
     },
     
-    clear: function(){
+    focus: function() {
+        this.messageField.focus();
+    },
+    
+    clear: function() {
         this.messageField.val('');
     },
     
@@ -356,6 +360,7 @@ var Client = Class({
         } else {
             this.messageForm.disable();
         }
+        this.messageForm.focus();
     },
     
     join: function(chan) {
