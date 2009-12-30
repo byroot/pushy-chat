@@ -2,19 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import re
-import os
 import time
 import json
-from datetime import datetime
 import socket
 import urllib
 import urlparse
 
-from collections import defaultdict
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer, SocketServer
 
-from server.models import Channel, Message, User, UserConnect, UserDisconnect
+from server.models import Channel, User
 
 
 class PushyChatServer(SocketServer.ThreadingMixIn, HTTPServer):
@@ -35,16 +32,17 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
     def purge_loop(cls):
         print '- start purge loop'
         while True:
-            time.sleep(5)
-            trash = [u for u in cls.users.values() if u.last_checkout > 20]
+            time.sleep(3)
+            trash = [u for u in cls.users.values() if u.last_checkout > 10]
             for user in trash:
                 cls.users.pop(user.session_id)
                 user.destroy()
-                'DISCONNECT: %s' % user.login
+                print 'DISCONNECT: %s' % user.login
             del trash
             
-            for chan in [c.name for c in cls.channels.values() if not len(c.listeners)]:
-                del cls.channels[chan]
+            for chan in cls.channels.values():
+                if not chan.has_listeners:
+                    del cls.channels[chan.name]
     
     def log_connection_close(self, error): # TODO: nice log
         print 'connection closed by client'
@@ -71,8 +69,8 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
                 self.user.last_checkout_at = time.time()
                 time.sleep(1)
                 
-        except socket.error, e:
-            self.log_connection_close(e)
+        except socket.error, exc:
+            self.log_connection_close(exc)
     
     def do_POST(self):
         print self.user.session_id
@@ -83,10 +81,10 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         else:
             try:
                 response = getattr(self, 'action_%s' % self.action)()
-            except Exception, e:
+            except Exception, exc:
                 self.send_response(500)
                 self.end_headers()
-                raise e
+                raise exc
                 
             if not isinstance(response, dict):
                 self.send_response(200 if response else 304)
@@ -151,7 +149,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
     @property
     def action(self):
         if not hasattr(self, '_action'):
-            path, query = urllib.splitquery(self.path)
+            path = urllib.splitquery(self.path)[0]
             self._action = path.split('/')[-1]
         return self._action
     
@@ -159,7 +157,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
     def GET(self):
         if not hasattr(self, '_post_get'):
             self._get_data = {}
-            path, query = urllib.splitquery(self.path)
+            query = urllib.splitquery(self.path)[1]
             self._get_data = self._clean_data(urlparse.parse_qs(query or ''))
         return self._get_data
 
@@ -176,4 +174,5 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
     
     @classmethod
     def _clean_data(cls, data):
-        return dict((k, v if len(v) > 1 else v.pop()) for k, v in data.iteritems())
+        return dict((k, v if len(v) > 1 else v.pop())
+                    for k, v in data.iteritems())

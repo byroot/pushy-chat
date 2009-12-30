@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import json
 import hashlib
 import time
-from itertools import chain
-from UserDict import UserDict
 
 def lowercase(string):
     return string[0].lower() + u''.join(
@@ -20,6 +17,7 @@ class Event(object):
 class UserEvent(Event):
     
     def __init__(self, user, chan):
+        super(UserEvent, self).__init__()
         self.user = user
         self.chan = chan
     
@@ -42,6 +40,7 @@ class UserConnect(UserEvent):
 class Message(Event):
 
     def __init__(self, user, chan, body):
+        super(Message, self).__init__()
         self.user = user
         self.chan = chan
         self.body = body
@@ -69,7 +68,11 @@ class Channel(object):
 
     def __repr__(self):
         return '<Channel: %s>' % self.name
-    
+
+    @property
+    def has_listeners(self):
+        return bool(len(self.listeners))
+
     def add_event(self, event):
         for user in self.listeners:
             user.add_event(event)
@@ -123,12 +126,9 @@ class User(object):
             pass
     
     def __repr__(self):
-        return '<User: login=%s last_checkout=%s>' % (repr(self.login), self.last_checkout)
+        return '<User: login=%s last_checkout=%s>' % (
+            repr(self.login), self.last_checkout)
     
     def destroy(self):
         for chan in self.channels:
             self.quit(chan)
-    
-    @classmethod
-    def generate_uid():
-        return hashlib.sha256().hexdigest()
