@@ -5,7 +5,7 @@ function pushConnect(url, callback) {
             try{
                 callback(eval(json));
             } catch(e) {
-                console.log('invalid packet: ', packet);
+                console.log('invalid packet: ', packet, e);
             }
         });
     }
@@ -112,7 +112,7 @@ var UserList = Class({
     },
     
     removeLogin: function(login) {
-        this.logins = this.logins.without(login);
+        this.logins = _(this.logins).without(login);
         this.sync();
     }
     

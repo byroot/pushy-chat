@@ -33,11 +33,12 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         print '- start purge loop'
         while True:
             time.sleep(3)
+            print '- exec purge loop'
             trash = [u for u in cls.users.values() if u.last_checkout > 10]
             for user in trash:
                 cls.users.pop(user.session_id)
                 user.destroy()
-                print 'DISCONNECT: %s' % user.login
+                print 'DESTROY: %s' % user.login
             del trash
 
             for chan in cls.channels.values():
@@ -73,18 +74,16 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
             self.log_connection_close(exc)
 
     def do_POST(self):
-        print self.user.session_id
-        print self.session_id
         if not hasattr(self, 'action_%s' % self.action):
             self.send_response(404)
             self.end_headers()
         else:
-            #try:
-            response = getattr(self, 'action_%s' % self.action)()
-            # except Exception, exc:
-            #     self.send_response(500)
-            #     self.end_headers()
-            #     raise exc
+            try:
+                response = getattr(self, 'action_%s' % self.action)()
+            except Exception, exc:
+                self.send_response(500)
+                self.end_headers()
+                raise exc
 
             if not isinstance(response, dict):
                 self.send_response(200 if response else 304)
@@ -136,14 +135,14 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
     @property
     def user(self):
         if self._user is None:
-            if self.session_id in self.users:
-                self._user = self.users[self.session_id]
-                self._user.first_connection = False
-                print 'retreive:', self._user.login
-            elif 'login' in self.GET:
+            if self.command == 'GET' and 'login' in self.GET: 
                 self._user = User(self.GET['login'], first_connection=True)
                 print 'connect:', self._user.login
                 self.users[self._user.session_id] = self._user
+            elif self.session_id in self.users:
+                self._user = self.users[self.session_id]
+                self._user.first_connection = False
+                print 'retreive:', self._user.login
         return self._user
 
     @property

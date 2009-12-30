@@ -57,9 +57,11 @@ class User(object):
 
     def join(self, chan):
         chan.add_listener(self)
+        self.channels.add(chan)
 
     def quit(self, chan):
         chan.remove_listener(self)
+        self.channels.remove(chan)
 
     def add_event(self, event):
         self.queue.append(event)
