@@ -34,7 +34,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         print '- start purge loop'
         while True:
             time.sleep(3)
-            
+
             trash = [u for u in cls.users.values() if u.last_checkout > 10]
             for user in trash:
                 cls.users.pop(user.session_id)
@@ -137,7 +137,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
     @property
     def user(self):
         if self._user is None:
-            if self.command == 'GET' and 'login' in self.GET: 
+            if self.command == 'GET' and 'login' in self.GET:
                 self._user = User(self.GET['login'], first_connection=True)
                 print 'connect:', self._user.login
                 self.users[self._user.session_id] = self._user
@@ -146,7 +146,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
                 self._user.first_connection = False
                 print 'retreive:', self._user.login
             else:
-                print 'user not found', self.command, self.session_id, self.users
+                raise Exception("User not found") # TODO: clean exceptions
         return self._user
 
     @property
