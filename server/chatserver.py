@@ -7,6 +7,7 @@ import json
 import socket
 import urllib
 import urlparse
+from itertools import chain
 
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer, SocketServer
@@ -33,7 +34,7 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
         print '- start purge loop'
         while True:
             time.sleep(3)
-            print '- exec purge loop'
+            
             trash = [u for u in cls.users.values() if u.last_checkout > 10]
             for user in trash:
                 cls.users.pop(user.session_id)
@@ -64,9 +65,10 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
                 self.wfile.write(u'(%s)' % json.dumps({'type': 'cookie',
                     'name': 'session_id', 'value': self.user.session_id}))
             while True:
-                for packet in self.user:
+                for packet in chain([{'type': 'hold_on'}], self.user):
                     self.wfile.write(u'(%s)' % json.dumps(packet))
                 self.wfile.flush()
+
                 self.user.last_checkout_at = time.time()
                 time.sleep(1)
 
@@ -143,6 +145,8 @@ class PushyChatRequestHandler(SimpleHTTPRequestHandler):
                 self._user = self.users[self.session_id]
                 self._user.first_connection = False
                 print 'retreive:', self._user.login
+            else:
+                print 'user not found', self.command, self.session_id, self.users
         return self._user
 
     @property

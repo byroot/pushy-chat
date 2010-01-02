@@ -301,6 +301,7 @@ var Client = Class({
     tag: 'div',
     
     initialize: function() {
+        document.cookie = 'session_id=';
         this.askLogin();
     },
     
@@ -334,6 +335,10 @@ var Client = Class({
     
     handle_cookie: function(message) {
         document.cookie = _.template('<%= name %>=<%= escape(value) %>;')(message);
+    },
+    
+    handle_hold_on: function(message) {
+        
     },
     
     handle_message: function(message) {

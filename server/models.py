@@ -78,5 +78,5 @@ class User(object):
             repr(self.login), self.last_checkout)
 
     def destroy(self):
-        for chan in self.channels:
+        for chan in list(self.channels):
             self.quit(chan)
