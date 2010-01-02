@@ -294,6 +294,10 @@ var LoginForm = Class({
             callback($(this).find(':input[name=login]').val());
             return false;
         })
+    },
+    
+    focus: function() {
+        $(this).find(':input[name=login]').focus();
     }
 });
 
@@ -394,5 +398,7 @@ var Client = Class({
 
 
 jQuery(function(){
-    $('body').append(Client.New());
+    var client = Client.New();
+    $('body').append(client);
+    client.loginForm.focus();
 });
