@@ -35,9 +35,25 @@ var Message = Class({
     tag: 'li',
     
     initialize: function(login, body) {
-        $(this).append($('<span>').addClass('login').text('<' + login + '> '))
-        $(this).append($('<span>').addClass('message-body').text(body))
+        $(this).addClass('message')
+            .append($('<span>').addClass('login').text('<' + login + '> '))
+            .append($('<span>').addClass('message-body').text(body));
     }
+});
+
+var Notification = Class({
+   tag: 'li',
+   
+   templates: {
+       user_connect: _.template('* <%= login %> has join this channel'),
+       user_disconnect: _.template('* <%= login %> has quit this channel')
+   },
+   
+   initialize: function(message) {
+       $(this).addClass('notification')
+        .text(this.templates[message.type](message));
+   }
+    
 });
 
 var ChatWindow = Class({
@@ -52,6 +68,10 @@ var ChatWindow = Class({
     
     appendMessage: function(message) {
         this.messageList.append(Message.New(message.login, message.body));
+    },
+    
+    appendNotification: function(message) {
+        this.messageList.append(Notification.New(message));
     }
     
 });
@@ -76,6 +96,10 @@ var WindowContainer = Class({
     
     appendMessage: function(message) {
         this.windows[message.chan].appendMessage(message);
+    },
+    
+    appendNotification: function(message) {
+        this.windows[message.chan].appendNotification(message);        
     },
     
     select: function(chan) {
@@ -302,6 +326,7 @@ var LoginForm = Class({
 });
 
 var Client = Class({
+    NOTIFICATION: _(['user_connect', 'user_disconnect']),
     tag: 'div',
     
     initialize: function() {
@@ -335,6 +360,9 @@ var Client = Class({
         
     dispatchPacket: function(packet) {
         this['handle_' + packet.type](packet);        
+        if (this.NOTIFICATION.include(packet.type)) {
+            this.windowContainer.appendNotification(packet);
+        }
     },
     
     handle_cookie: function(message) {

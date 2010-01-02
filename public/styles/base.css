@@ -56,6 +56,12 @@ ul.message-list > li {
     height: 20px;
 }
 
+ul.message-list > li.notification {
+    font-style: italic;
+    font-size: 10px;
+    font-height: 12px;
+}
+
 ul#tablist {
     padding: 0px;
     margin: 0px;
