@@ -31,6 +31,7 @@ class Event(object):
     def _to_dict(self):
         return {'type': self.get_type()}
 
+
 class UserEvent(Event):
 
     def __init__(self, user, chan):
