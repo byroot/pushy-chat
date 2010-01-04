@@ -7,7 +7,7 @@ from twisted.web import resource, server, static
 from twisted.application import internet, service
 from twisted.internet import reactor
 
-from server.twistedserver import Listen, Login, Send, Join, Quit
+from server.chatserver import Listen, Login, Send, Join, Quit
 
 PUBLIC_DIRECTORY = abspath(join(dirname(__file__), '..', 'public'))
 
