@@ -1,16 +1,2 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-import threading
-
-from os import path
-from twisted.internet import reactor
-
-from server.twistedserver import site
-
-PUBLIC_DIRECTORY = path.abspath(path.join(path.dirname(__file__), 'public'))
-
-if __name__ == '__main__':
-    print '- serve content of: %s' % PUBLIC_DIRECTORY
-    reactor.listenTCP(8000, site)
-    reactor.run()
+#!/bin/bash
+twistd -noy `dirname $0`/server/bootstrap

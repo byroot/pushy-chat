@@ -3,6 +3,7 @@
 import json
 
 from twisted.web import resource, server, static
+from twisted.application import internet
 
 from server.models import User, Channel
 from server.utils import JSONRequest
@@ -70,21 +71,3 @@ class QuitChannel(BasePushyChatResource):
     def render_POST(self, request):
         self.get_chan(request).remove_listener(self.get_user(request))
         return ''
-
-
-root = static.File('public')
-chat = resource.NoResource()
-root.putChild('chat', chat)
-
-children = (
-    ('', Subscriber()),
-    ('login', Login()),
-    ('send', SendMessage()),
-    ('join', JoinChannel()),
-    ('quit', QuitChannel())
-)
-
-for i in children:
-    chat.putChild(*i)
-site = server.Site(root)
-

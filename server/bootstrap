@@ -1,0 +1,42 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from os import path
+
+from twisted.web import resource, server, static
+from twisted.application import internet, service
+from twisted.internet import reactor
+
+from server.twistedserver import Subscriber, Login, SendMessage, JoinChannel, QuitChannel
+
+PUBLIC_DIRECTORY = path.abspath(path.join(path.dirname(__file__), '..', 'public'))
+
+#if __name__ == '__main__':
+print '- public directory: %s' % PUBLIC_DIRECTORY
+
+root = static.File(PUBLIC_DIRECTORY)
+chat = resource.NoResource()
+root.putChild('chat', chat)
+site = server.Site(root)
+
+children = (
+    ('', Subscriber()),
+    ('login', Login()),
+    ('send', SendMessage()),
+    ('join', JoinChannel()),
+    ('quit', QuitChannel())
+)
+
+purgeCallbacks = []
+for name, child in children:
+    if hasattr(child, 'clean'):
+        purgeCallbacks.append(child.clean)
+    chat.putChild(name, child)
+
+def purgeTick():
+    for callback in purgeCallbacks:
+        callback()
+
+application = service.Application('simple-pubsub') 
+httpServer = internet.TCPServer(8000, site).setServiceParent(application)
+purgeLoop = internet.TimerService(60, purgeTick).setServiceParent(application)
