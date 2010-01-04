@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import hashlib
 import time
 
 from server.events import Message, UserConnect, UserDisconnect

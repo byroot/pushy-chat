@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 import json
 
-from twisted.web import resource, server, static
-from twisted.application import internet
+from twisted.web import resource, server
 
 from server.models import User, Channel
 from server.utils import JSONRequest
