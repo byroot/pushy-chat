@@ -1,2 +1,2 @@
 #!/bin/bash
-twistd -noy `dirname $0`/server/bootstrap
+twistd -noy `dirname $0`/server/bootstrap.py
