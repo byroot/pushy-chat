@@ -37,19 +37,16 @@ class Channel(object):
 
 class User(object):
 
-    def __init__(self, login, first_connection=False):
-        self.session_id = self.hash(login)
+    def __init__(self, login, first_connection=True):
+        self.request = None
         self.first_connection = first_connection
         self.last_checkout_at = time.time()
-        self.queue = []
         self.login = login
         self.channels = set()
 
-    @staticmethod
-    def hash(string):
-        salt = hashlib.sha1("C'est tout ce que ça te fait quand je te dit"\
-        " qu'on va manger des chips ?").hexdigest()
-        return hashlib.sha1(str(time.time()) + string + salt).hexdigest()
+    def update_request(self, request):
+        self.request = request
+        self.first_connection = False
 
     @property
     def last_checkout(self):
@@ -64,14 +61,7 @@ class User(object):
         self.channels.remove(chan)
 
     def add_event(self, event):
-        self.queue.append(event)
-
-    def __iter__(self):
-        try:
-            while True:
-                yield self.queue.pop().to_dict()
-        except IndexError:
-            pass
+        self.request.write(event)
 
     def __repr__(self):
         return '<User: login=%s last_checkout=%s>' % (

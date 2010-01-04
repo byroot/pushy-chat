@@ -3,17 +3,14 @@
 
 import threading
 
-from os import chdir, path
+from os import path
+from twisted.internet import reactor
 
-from server.chatserver import PushyChatServer, PushyChatRequestHandler
+from server.twistedserver import site
 
 PUBLIC_DIRECTORY = path.abspath(path.join(path.dirname(__file__), 'public'))
 
 if __name__ == '__main__':
     print '- serve content of: %s' % PUBLIC_DIRECTORY
-    chdir(PUBLIC_DIRECTORY)
-    purge_loop = threading.Thread(target=PushyChatRequestHandler.purge_loop)
-    purge_loop.daemon = True
-    purge_loop.start()
-    server = PushyChatServer(('', 8000), PushyChatRequestHandler)
-    server.serve_forever()
+    reactor.listenTCP(8000, site)
+    reactor.run()

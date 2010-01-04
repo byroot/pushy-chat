@@ -330,7 +330,6 @@ var Client = Class({
     tag: 'div',
     
     initialize: function() {
-        document.cookie = 'session_id=';
         this.askLogin();
     },
     
@@ -350,23 +349,23 @@ var Client = Class({
         _.each(children, _.bind(function(c) { $(this).append(c) }, this));
     },
     
-    connect: function(login){
+    connect: function(login) {
         if (login) {
             this.login = login;
-            pushConnect(this.url('?login=' + login), this.dispatchPacket)
-            this.buildInterface();
+            $.post(this.url('login'), { login: login }, this.subscribe);
         }
     },
-        
+    
+    subscribe: function() {
+        pushConnect(this.url('?login=' + this.login), this.dispatchPacket)
+        this.buildInterface();        
+    },
+    
     dispatchPacket: function(packet) {
         this['handle_' + packet.type](packet);        
         if (this.NOTIFICATION.include(packet.type)) {
             this.windowContainer.appendNotification(packet);
         }
-    },
-    
-    handle_cookie: function(message) {
-        document.cookie = _.template('<%= name %>=<%= escape(value) %>;')(message);
     },
     
     handle_hold_on: function(message) {

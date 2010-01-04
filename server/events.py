@@ -7,10 +7,6 @@ def lowercase(string):
 
 class Event(object):
 
-    def __init__(self, user, chan):
-        self.user = user
-        self.chan = chan
-
     def get_type(self):
         return lowercase(self.__class__.__name__)
 
@@ -33,20 +29,28 @@ class Event(object):
         return data
 
     def _to_dict(self):
-        return {'type': self.get_type(),
-                'login': self.user.login,
-                'chan': self.chan.name}
+        return {'type': self.get_type()}
+
+class UserEvent(Event):
+
+    def __init__(self, user, chan):
+        super(Event, self).__init__()
+        self.user = user
+        self.chan = chan
+
+    def _to_dict(self):
+        return {'login': self.user.login, 'chan': self.chan.name}
 
 
-class UserDisconnect(Event):
+class UserDisconnect(UserEvent):
     pass
 
 
-class UserConnect(Event):
+class UserConnect(UserEvent):
     pass
 
 
-class Message(Event):
+class Message(UserEvent):
 
     def __init__(self, user, chan, body):
         super(Message, self).__init__(user, chan)
