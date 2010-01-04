@@ -33,12 +33,8 @@ class BasePushyChatResource(resource.Resource):
 class Subscriber(BasePushyChatResource):
 
     def render_GET(self, request):
-        # we need this hack for WebKit-based browsers like Safari and Chrome
-        #if 'WebKit' in request.getHeader("User-Agent"):
-        #    print request.getHeader('User-Agent')
-        #    request.setHeader('Content-Type', "multipart/x-mixed-replace")
+        request.setHeader('Content-Type', 'application/json, text/javascript')
         request.getSession().user.update_request(JSONRequest(request))
-        # tell browser not to close connection
         return server.NOT_DONE_YET
 
 
@@ -63,6 +59,7 @@ class SendMessage(BasePushyChatResource):
 class JoinChannel(BasePushyChatResource):
     
     def render_POST(self, request):
+        request.setHeader('Content-Type', 'application/json, text/javascript')
         chan = self.get_or_create_chan(request)
         chan.add_listener(self.get_user(request))
         return '(%s)' % json.dumps({'listeners': [u.login for u in chan.listeners]})
