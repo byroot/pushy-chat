@@ -39,10 +39,10 @@ class JSONRequest(object, server.Request):
 
     @property
     def chan(self):
-        chan_name = request.args['chan'][0]
-        chan = cls.channels.get(chan_name, None)
+        chan_name = self.args['chan'][0]
+        chan = self.channels.get(chan_name, None)
         if not chan:
-            chan = cls.channels[chan_name] = Channel(chan_name)
+            chan = self.channels[chan_name] = Channel(chan_name)
         return chan
 
     @classmethod
@@ -60,7 +60,7 @@ class JSONRequest(object, server.Request):
 Data = JSONRequest
 
 
-class Listen(BasePushyChatResource):
+class Listen(resource.Resource):
 
     def render_GET(self, request):
         request.setHeader('Content-Type', 'application/json, text/javascript')
@@ -68,7 +68,7 @@ class Listen(BasePushyChatResource):
         return server.NOT_DONE_YET
 
 
-class Login(BasePushyChatResource):
+class Login(resource.Resource):
 
     def render_POST(self, request):
         login = request.args["login"].pop()
@@ -76,14 +76,14 @@ class Login(BasePushyChatResource):
         return ''
 
 
-class Send(BasePushyChatResource):
+class Send(resource.Resource):
 
     def render_POST(self, request):
         request.chan.post_message(request.user, request.args['body'][0])
         return ''
 
 
-class Join(BasePushyChatResource):
+class Join(resource.Resource):
 
     def render_POST(self, request):
         request.setHeader('Content-Type', 'application/json, text/javascript')
@@ -92,7 +92,7 @@ class Join(BasePushyChatResource):
         return '(%s)' % json.dumps(message)
 
 
-class Quit(BasePushyChatResource):
+class Quit(resource.Resource):
 
     def render_POST(self, request):
         request.chan.remove_listener(request.user)
