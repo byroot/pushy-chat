@@ -361,7 +361,7 @@ var Client = Class({
     },
     
     subscribe: function() {
-        pushConnect(this.url('?login=' + this.login), this.dispatchPacket)
+        pushConnect(this.url(), this.dispatchPacket)
         this.buildInterface();
     },
     
@@ -377,15 +377,18 @@ var Client = Class({
     },
     
     handle_message: function(message) {
+        this.open(message.chan);
         this.windowContainer.appendMessage(message);
     },
     
     handle_user_connect: function(message) {
-        this.userListContainer.lists[message.chan].appendLogin(message.login);
+        var list = this.userListContainer.lists[message.chan];
+        if (list) list.appendLogin(message.login);
     },
 
     handle_user_disconnect: function(message) {
-        this.userListContainer.lists[message.chan].removeLogin(message.login);
+        var list = this.userListContainer.lists[message.chan];
+        if (list) list.removeLogin(message.login);
     },
     
     url: function(action) {
@@ -403,9 +406,14 @@ var Client = Class({
         this.messageForm.focus();
     },
     
+    open: function(chan) {
+        if (!chan || _(this.tabList.tabs).chain().keys().include(chan).value()) return;
+        _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'append', chan);
+    },
+    
     join: function(chan) {
         if (!chan) return;
-        _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'append', chan);
+        this.open(chan);
         this.switchTo(chan);
         
         var list = this.userListContainer.lists[chan];
@@ -419,7 +427,7 @@ var Client = Class({
     quit: function(chan) {
         jQuery.post(this.url('quit'), { chan: chan });
         _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'remove', chan);
-        if (!this.tabList.tabs.length) this.messageForm.disable();
+        if (_(this.tabList.tabs).isEmpty()) this.messageForm.disable();
     },
     
     send: function(chan, body, callback) {

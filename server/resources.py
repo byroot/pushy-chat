@@ -14,6 +14,11 @@ class Data:
     users = {}
 
     @classmethod
+    def rename(cls, old_login, new_login):
+        user = cls.users[new_login] = cls.users.pop(old_login)
+        user.rename(new_login)
+
+    @classmethod
     def purge_loop(cls):
         for login, user in cls.users.items():
             user.add_event(HoldOn())
@@ -44,7 +49,10 @@ class JSONRequest(object, server.Request):
 
     @property
     def user(self):
-        return self.getSession().user
+        try:
+            return self.getSession().user
+        except AttributeError:
+            return None
 
     @user.setter
     def user(self, new_user):
@@ -72,9 +80,12 @@ class Listen(resource.Resource):
 class Login(resource.Resource):
 
     def render_POST(self, request):
-        login = request.args["login"].pop()
-        request.user = Data.users[login] = User(login)
-        return ''
+        login = request.args.get('login', [None]).pop()
+        if not request.user:
+            request.user = Data.users[login] = User(login)
+        elif not request.user.login == login:
+            Data.rename(request.user.login, login)
+        return '' # TODO: handle possible errors like nickname already in use
 
 
 class Send(resource.Resource):

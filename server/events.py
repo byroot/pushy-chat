@@ -36,6 +36,16 @@ class HoldOn(Event):
     pass
 
 
+class UserRenamed(Event):
+
+    def __init__(self, old_login, new_login):
+        self.old_login = old_login
+        self.new_login = new_login
+
+    def _to_dict(self):
+        return {'old_login': self.old_login, 'new_login': self.new_login}
+
+
 class UserEvent(Event):
 
     def __init__(self, user, chan):

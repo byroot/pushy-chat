@@ -31,4 +31,4 @@ for name, child in children:
 
 application = service.Application('pushy-chat')
 httpServer = internet.TCPServer(8000, site).setServiceParent(application)
-purgeLoop = internet.TimerService(5, Data.purge_loop).setServiceParent(application)
+purgeLoop = internet.TimerService(20, Data.purge_loop).setServiceParent(application)

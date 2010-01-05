@@ -2,7 +2,7 @@
 
 import time
 
-from server.events import Message, UserConnect, UserDisconnect
+from server.events import Message, UserConnect, UserDisconnect, UserRenamed
 
 
 class Channel(object):
@@ -46,19 +46,27 @@ class User(object):
         self.channels = set()
 
     def update_request(self, request):
+        request.after_connection_lost = self.unset_request
         self.request = request
         self.connected = True
+        self.first_connection = False
+        self.flush_queue()
+
+    def flush_queue(self):
         for event in self.queue:
             self.add_event(event)
         self.queue = []
-        self.first_connection = False
-        request.after_connection_lost = self.unset_request
 
     def unset_request(self, disconnected_request=None):
         if not disconnected_request or self.request is disconnected_request:
             self.request = None
             self.connected = False
         disconnected_request.after_connection_lost = None
+
+    def rename(self, new_login):
+        event = UserRenamed(self.login, new_login)
+        for user in set(chain(c.listeners for c in self.channels)):
+            user.add_event(event)
 
     def touch(self):
         self.last_checkout_at = time.time()
