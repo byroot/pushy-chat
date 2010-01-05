@@ -350,6 +350,7 @@ var Client = Class({
         ];
         $(this).empty();
         _.each(children, _.bind(function(c) { $(this).append(c) }, this));
+        $('li#new-tab > button').focus();
     },
     
     connect: function(login) {
