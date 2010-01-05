@@ -66,7 +66,7 @@ class User(object):
 
     def rename(self, new_login):
         event = UserRenamed(self.login, new_login)
-        for user in set(chain(*(c.listeners for c in self.channels))):
+        for user in set(chain.from_iterable(c.listeners for c in self.channels)):
             user.add_event(event)
         self.login = new_login
 
