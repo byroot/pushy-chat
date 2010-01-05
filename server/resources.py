@@ -63,11 +63,6 @@ class Listen(BasePushyChatResource):
         request.getSession().user.update_request(request)
         return server.NOT_DONE_YET
 
-    def clean(self):
-        print 'loop over users'
-        for user in self.users.values():
-            print user.login, ': ', 'disconnected' if user.request._disconnected else 'online'
-
 
 class Login(BasePushyChatResource):
 
