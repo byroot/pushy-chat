@@ -249,8 +249,9 @@ var MessageForm = Class({
         this.client = client;
         this.form = $('<form>').submit(this.send).keypress(this.complete);
         this.messageField = $('<input id="message" type="text" name="message">').appendTo(this.form);
-        $('<input type="submit">').appendTo(this.form)
+        $('<input type="submit">').appendTo(this.form);
         this.form.appendTo(this);
+        this.disable();
     },
     
     complete: function(event) {
@@ -278,6 +279,7 @@ var MessageForm = Class({
     },
     
     focus: function() {
+        this.enable();
         this.messageField.focus();
     },
     
@@ -287,6 +289,7 @@ var MessageForm = Class({
     
     disable: function() {
         this.find('input').attr('disabled', 'disabled');
+        $('li#new-tab > button').focus();
     },
     
     enable: function() {
@@ -345,7 +348,7 @@ var Client = Class({
             this.tabList = TabList.New(this),
             this.messageForm = MessageForm.New(this)
         ];
-        $(this).empty()
+        $(this).empty();
         _.each(children, _.bind(function(c) { $(this).append(c) }, this));
     },
     
@@ -358,11 +361,11 @@ var Client = Class({
     
     subscribe: function() {
         pushConnect(this.url('?login=' + this.login), this.dispatchPacket)
-        this.buildInterface();        
+        this.buildInterface();
     },
     
     dispatchPacket: function(packet) {
-        this['handle_' + packet.type](packet);        
+        this['handle_' + packet.type](packet);
         if (this.NOTIFICATION.include(packet.type)) {
             this.windowContainer.appendNotification(packet);
         }
@@ -415,6 +418,7 @@ var Client = Class({
     quit: function(chan) {
         jQuery.post(this.url('quit'), { chan: chan });
         _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'remove', chan);
+        if (!this.tabList.tabs.length) this.messageForm.disable();
     },
     
     send: function(chan, body, callback) {
