@@ -102,6 +102,3 @@ class User(object):
         print self, 'DISCONNECTED'
         for chan in list(self.channels):
             self.quit(chan)
-
-    def get_recap(self):
-        return dict((c.name, [l.login for l in c.listeners]) for c in self.channels)
