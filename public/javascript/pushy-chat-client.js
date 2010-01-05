@@ -10,7 +10,6 @@ function pushConnect(url, callback) {
         });
     }
     
-    jQuery.enableAjaxStream(true);
     function startStream(){
         var recursive = _.bind(setTimeout, window, startStream, 20);
         jQuery.get(url, recursive, parsePackets);
@@ -128,6 +127,11 @@ var UserList = Class({
         this.clean();
         $(this).empty();
         _(this.logins).each(_.bind(function(l) { $(this).append($('<li>').text(l)) }, this));
+    },
+    
+    updateLogins: function(logins) {
+        this.logins = logins;
+        this.sync();
     },
     
     appendLogin: function(login) {
@@ -353,16 +357,21 @@ var Client = Class({
         $('li#new-tab > button').focus();
     },
     
+    setRecap: function(data, textStatus) {
+        _(data.channels).each(this.join);
+        this.subscribe();
+    },
+    
     connect: function(login) {
         if (login) {
             this.login = login;
-            $.post(this.url('login'), { login: login }, this.subscribe);
+            this.buildInterface();
+            $.post(this.url('login'), { login: login }, this.setRecap, 'json');
         }
     },
     
     subscribe: function() {
         pushConnect(this.url(), this.dispatchPacket)
-        this.buildInterface();
     },
     
     dispatchPacket: function(packet) {
@@ -418,7 +427,7 @@ var Client = Class({
         
         var list = this.userListContainer.lists[chan];
         var callback = _.bind(function(data, textStatus) {
-            _(data.listeners).each(function(login) { list.appendLogin(login); });
+            list.updateLogins(data.listeners);
         }, this);
         
         jQuery.post(this.url('join'), { chan: chan }, callback, 'json');
@@ -437,7 +446,8 @@ var Client = Class({
 });
 
 
-jQuery(function(){
+jQuery(function($){
+    jQuery.enableAjaxStream(true);
     var client = Client.New();
     $('body').append(client);
     client.loginForm.focus();

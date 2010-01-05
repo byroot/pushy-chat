@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+from itertools import chain
 
 from server.events import Message, UserConnect, UserDisconnect, UserRenamed
 
@@ -26,7 +27,8 @@ class Channel(object):
         self.add_event(Message(user, self, body))
 
     def add_listener(self, user):
-        self.add_event(UserConnect(user, self))
+        if user not in self.listeners:
+            self.add_event(UserConnect(user, self))
         self.listeners.add(user)
 
     def remove_listener(self, user):
@@ -59,18 +61,18 @@ class User(object):
     def unset_request(self, disconnected_request=None):
         if not disconnected_request or self.request is disconnected_request:
             self.request = None
-            self.connected = False
             self._last_online = time.time()
         disconnected_request.after_connection_lost = None
 
     def rename(self, new_login):
         event = UserRenamed(self.login, new_login)
-        for user in set(chain(c.listeners for c in self.channels)):
+        for user in set(chain(*(c.listeners for c in self.channels))):
             user.add_event(event)
+        self.login = new_login
 
     @property
     def connected(self):
-        return not self.last_online
+        return bool(self.request)
 
     @property
     def last_online(self):
@@ -100,3 +102,6 @@ class User(object):
         print self, 'DISCONNECTED'
         for chan in list(self.channels):
             self.quit(chan)
+
+    def get_recap(self):
+        return dict((c.name, [l.login for l in c.listeners]) for c in self.channels)

@@ -38,9 +38,7 @@ class JSONRequest(object, server.Request):
         server.Request.__init__(self, *args, **kwargs)
 
     def write(self, content):
-        if isinstance(content, Event):
-            content = '(%s)' % json.dumps(content.to_dict())
-        server.Request.write(self, content)
+        server.Request.write(self, self.to_json(content))
 
     def connectionLost(self, reason):
         server.Request.connectionLost(self, reason)
@@ -68,6 +66,21 @@ class JSONRequest(object, server.Request):
             chan = Data.channels[chan_name] = Channel(chan_name)
         return chan
 
+    @staticmethod
+    def to_json(content):
+        if isinstance(content, (Event, dict)):
+            if isinstance(content, Event):
+                content = content.to_dict()
+            content = '(%s)' % json.dumps(content)
+        return content or ''
+
+    @staticmethod
+    def action(method):
+        def placeholder(self, request):
+            request.write(method(self, request))
+            return ''
+        return placeholder
+
 
 class Listen(resource.Resource):
 
@@ -79,33 +92,38 @@ class Listen(resource.Resource):
 
 class Login(resource.Resource):
 
+    @JSONRequest.action
     def render_POST(self, request):
         login = request.args.get('login', [None]).pop()
-        if not request.user:
-            request.user = Data.users[login] = User(login)
-        elif not request.user.login == login:
-            Data.rename(request.user.login, login)
-        return '' # TODO: handle possible errors like nickname already in use
+        if request.user and request.user.login == login:
+            # MAYBE: destroy old user ?
+            return {'channels': [c.name for c in request.user.channels]}
+
+        request.user = Data.users[login] = User(login)
+        return {'channels': []}
+        #if not request.user.login == login:
+        #    Data.rename(request.user.login, login)
+        # TODO: handle possible errors like nickname already in use
 
 
 class Send(resource.Resource):
 
+    @JSONRequest.action
     def render_POST(self, request):
         request.chan.post_message(request.user, request.args['body'][0])
-        return ''
 
 
 class Join(resource.Resource):
 
+    @JSONRequest.action
     def render_POST(self, request):
         request.setHeader('Content-Type', 'application/json, text/javascript')
         request.user.join(request.chan)
-        message = {'listeners': [u.login for u in request.chan.listeners]}
-        return '(%s)' % json.dumps(message)
+        return {'listeners': [u.login for u in request.chan.listeners]}
 
 
 class Quit(resource.Resource):
 
+    @JSONRequest.action
     def render_POST(self, request):
         request.chan.remove_listener(request.user)
-        return ''
