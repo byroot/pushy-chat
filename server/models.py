@@ -38,14 +38,30 @@ class User(object):
 
     def __init__(self, login, first_connection=True):
         self.request = None
+        self.connected = False
         self.first_connection = first_connection
         self.last_checkout_at = time.time()
         self.login = login
+        self.queue = []
         self.channels = set()
 
     def update_request(self, request):
         self.request = request
+        self.connected = True
+        for event in self.queue:
+            self.add_event(event)
+        self.queue = []
         self.first_connection = False
+        request.after_connection_lost = self.unset_request
+
+    def unset_request(self, disconnected_request=None):
+        if not disconnected_request or self.request is disconnected_request:
+            self.request = None
+            self.connected = False
+        disconnected_request.after_connection_lost = None
+
+    def touch(self):
+        self.last_checkout_at = time.time()
 
     @property
     def last_checkout(self):
@@ -60,12 +76,17 @@ class User(object):
         self.channels.remove(chan)
 
     def add_event(self, event):
-        self.request.write(event)
+        if self.connected:
+            self.request.write(event)
+            self.touch()
+        else:
+            self.queue.append(event)
 
     def __repr__(self):
         return '<User: login=%s last_checkout=%s>' % (
             repr(self.login), self.last_checkout)
 
     def destroy(self):
+        print 'DESTROY', self
         for chan in list(self.channels):
             self.quit(chan)

@@ -7,7 +7,7 @@ from twisted.web import resource, server, static
 from twisted.application import internet, service
 from twisted.internet import reactor
 
-from server.resources import Listen, Login, Send, Join, Quit
+from server.resources import Listen, Login, Send, Join, Quit, JSONRequest, BasePushyChatResource
 
 PUBLIC_DIRECTORY = abspath(join(dirname(__file__), '..', 'public'))
 
@@ -17,6 +17,7 @@ print '- public directory: %s' % PUBLIC_DIRECTORY
 root = static.File(PUBLIC_DIRECTORY)
 chat = resource.NoResource()
 root.putChild('chat', chat)
+server.Site.requestFactory = JSONRequest
 site = server.Site(root)
 
 children = (('', Listen()),
@@ -25,17 +26,9 @@ children = (('', Listen()),
             ('join', Join()),
             ('quit', Quit()))
 
-purgeCallbacks = []
 for name, child in children:
-    if hasattr(child, 'clean'):
-        purgeCallbacks.append(child.clean)
     chat.putChild(name, child)
-
-
-def purgeTick():
-    for callback in purgeCallbacks:
-        callback()
 
 application = service.Application('pushy-chat')
 httpServer = internet.TCPServer(8000, site).setServiceParent(application)
-purgeLoop = internet.TimerService(60, purgeTick).setServiceParent(application)
+purgeLoop = internet.TimerService(5, BasePushyChatResource.purge_loop).setServiceParent(application)

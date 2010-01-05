@@ -4,8 +4,23 @@ import json
 
 from twisted.web import resource, server
 
+from server.events import Event
 from server.models import User, Channel
 from server.utils import JSONRequest
+
+
+class JSONRequest(server.Request):
+
+    def write(self, content):
+        if isinstance(content, Event):
+            content = '(%s)' % json.dumps(content.to_dict())
+        server.Request.write(self, content)
+
+    def connectionLost(self, reason):
+        print 'CONNECTION LOST !!!!!!!!!'
+        server.Request.connectionLost(self, reason)
+        if getattr(self, 'after_connection_lost', False):
+            self.after_connection_lost(self)
 
 
 class BasePushyChatResource(resource.Resource):
@@ -29,13 +44,29 @@ class BasePushyChatResource(resource.Resource):
     def get_user(request):
         return request.getSession().user
 
+    @classmethod
+    def purge_loop(cls):
+        for login, user in cls.users.items():
+            if user.last_checkout > 10:
+                user.destroy()
+                cls.users.pop(login)
+
+        for chan_name, chan in cls.channels.items():
+            if not chan.has_listeners:
+                cls.channels.pop(chan_name)
+
 
 class Listen(BasePushyChatResource):
 
     def render_GET(self, request):
         request.setHeader('Content-Type', 'application/json, text/javascript')
-        request.getSession().user.update_request(JSONRequest(request))
+        request.getSession().user.update_request(request)
         return server.NOT_DONE_YET
+
+    def clean(self):
+        print 'loop over users'
+        for user in self.users.values():
+            print user.login, ': ', 'disconnected' if user.request._disconnected else 'online'
 
 
 class Login(BasePushyChatResource):
