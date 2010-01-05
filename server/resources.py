@@ -22,7 +22,7 @@ class Data:
     def purge_loop(cls):
         for login, user in cls.users.items():
             user.add_event(HoldOn())
-            if user.last_checkout > 10:
+            if user.last_online > 15:
                 user.destroy()
                 cls.users.pop(login)
 

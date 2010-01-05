@@ -38,9 +38,8 @@ class User(object):
 
     def __init__(self, login, first_connection=True):
         self.request = None
-        self.connected = False
+        self._last_online = None
         self.first_connection = first_connection
-        self.last_checkout_at = time.time()
         self.login = login
         self.queue = []
         self.channels = set()
@@ -48,7 +47,7 @@ class User(object):
     def update_request(self, request):
         request.after_connection_lost = self.unset_request
         self.request = request
-        self.connected = True
+        self._last_online = None
         self.first_connection = False
         self.flush_queue()
 
@@ -61,6 +60,7 @@ class User(object):
         if not disconnected_request or self.request is disconnected_request:
             self.request = None
             self.connected = False
+            self._last_online = time.time()
         disconnected_request.after_connection_lost = None
 
     def rename(self, new_login):
@@ -68,12 +68,15 @@ class User(object):
         for user in set(chain(c.listeners for c in self.channels)):
             user.add_event(event)
 
-    def touch(self):
-        self.last_checkout_at = time.time()
+    @property
+    def connected(self):
+        return not self.last_online
 
     @property
-    def last_checkout(self):
-        return int(time.time() - self.last_checkout_at)
+    def last_online(self):
+        if self._last_online:
+            return int(time.time() - self._last_online)
+        return 0
 
     def join(self, chan):
         chan.add_listener(self)
@@ -86,13 +89,12 @@ class User(object):
     def add_event(self, event):
         if self.connected:
             self.request.write(event)
-            self.touch()
         else:
             self.queue.append(event)
 
     def __repr__(self):
-        return '<User: login=%s last_checkout=%s>' % (
-            repr(self.login), self.last_checkout)
+        return '<User: login=%s last_online=%s>' % (
+            repr(self.login), self.last_online)
 
     def destroy(self):
         print self, 'DISCONNECTED'
