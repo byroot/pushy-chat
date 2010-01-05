@@ -87,6 +87,6 @@ class User(object):
             repr(self.login), self.last_checkout)
 
     def destroy(self):
-        print 'DESTROY', self
+        print self, 'DISCONNECTED'
         for chan in list(self.channels):
             self.quit(chan)

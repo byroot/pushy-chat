@@ -88,7 +88,7 @@ class Join(resource.Resource):
 
     def render_POST(self, request):
         request.setHeader('Content-Type', 'application/json, text/javascript')
-        request.chan.add_listener(request.user)
+        request.user.join(request.chan)
         message = {'listeners': [u.login for u in request.chan.listeners]}
         return '(%s)' % json.dumps(message)
 
