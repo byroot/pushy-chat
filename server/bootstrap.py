@@ -7,7 +7,7 @@ from twisted.web import resource, server, static
 from twisted.application import internet, service
 from twisted.internet import reactor
 
-from server.resources import Listen, Login, Send, Join, Quit, JSONRequest
+from server.resources import Listen, Login, Send, Join, Quit, Data, JSONRequest
 
 PUBLIC_DIRECTORY = abspath(join(dirname(__file__), '..', 'public'))
 
@@ -31,4 +31,4 @@ for name, child in children:
 
 application = service.Application('pushy-chat')
 httpServer = internet.TCPServer(8000, site).setServiceParent(application)
-purgeLoop = internet.TimerService(5, JSONRequest.purge_loop).setServiceParent(application)
+purgeLoop = internet.TimerService(5, Data.purge_loop).setServiceParent(application)

@@ -4,14 +4,29 @@ import json
 
 from twisted.web import resource, server
 
-from server.events import Event
+from server.events import Event, HoldOn
 from server.models import User, Channel
 from server.utils import JSONRequest
 
 
-class JSONRequest(object, server.Request):
+class Data:
     channels = {}
     users = {}
+
+    @classmethod
+    def purge_loop(cls):
+        for login, user in cls.users.items():
+            user.add_event(HoldOn())
+            if user.last_checkout > 10:
+                user.destroy()
+                cls.users.pop(login)
+
+        for chan_name, chan in cls.channels.items():
+            if not chan.has_listeners:
+                cls.channels.pop(chan_name)
+
+
+class JSONRequest(object, server.Request):
 
     def __init__(self, *args, **kwargs):
         object.__init__(self)
@@ -40,24 +55,10 @@ class JSONRequest(object, server.Request):
     @property
     def chan(self):
         chan_name = self.args['chan'][0]
-        chan = self.channels.get(chan_name, None)
+        chan = Data.channels.get(chan_name, None)
         if not chan:
-            chan = self.channels[chan_name] = Channel(chan_name)
+            chan = Data.channels[chan_name] = Channel(chan_name)
         return chan
-
-    @classmethod
-    def purge_loop(cls):
-        for login, user in cls.users.items():
-            if user.last_checkout > 10:
-                user.destroy()
-                cls.users.pop(login)
-
-        for chan_name, chan in cls.channels.items():
-            if not chan.has_listeners:
-                cls.channels.pop(chan_name)
-
-
-Data = JSONRequest
 
 
 class Listen(resource.Resource):

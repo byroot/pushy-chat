@@ -32,6 +32,10 @@ class Event(object):
         return {'type': self.get_type()}
 
 
+class HoldOn(Event):
+    pass
+
+
 class UserEvent(Event):
 
     def __init__(self, user, chan):
