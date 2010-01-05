@@ -1,0 +1,31 @@
+#!/bin/bash
+
+dir=`dirname $0`
+bootstrap=$dir/server/bootstrap.py
+mkdir -p $dir/var
+logfile=$dir/var/pushy-chatd.log
+pidfile=$dir/var/pushy-chatd.pid
+
+case $1 in
+    'start')
+        [ -e $pidfile ] && echo '- server already started' && exit 1
+        twistd -oy $bootstrap -l $logfile --pidfile $pidfile && echo '- started'
+    ;;
+    
+    'stop')
+        [ ! -e $pidfile ] && echo '- server already stoped' && exit 1
+        kill `cat $pidfile` && echo '- stoped'
+    ;;
+    
+    'restart')
+        $0 stop && $0 start
+    ;;
+    
+    'status')
+        [ -e $pidfile ] && kill -0 `cat $pidfile` > /dev/null && echo '- started' || echo '- stoped'
+    ;;
+    
+    *)
+        echo "Usage: $0 start|stop|restart|status"
+    ;;
+esac
