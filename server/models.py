@@ -15,6 +15,9 @@ class Channel(object):
     def __repr__(self):
         return '<Channel: %s>' % self.name
 
+    def __hash__(self):
+        return hash('CHAN-%s' % self.name)
+
     @property
     def has_listeners(self):
         return bool(len(self.listeners))
@@ -32,7 +35,8 @@ class Channel(object):
         self.listeners.add(user)
 
     def remove_listener(self, user):
-        self.listeners.remove(user)
+        if user in self.listeners:
+            self.listeners.remove(user)
         self.add_event(UserDisconnect(user, self))
 
 
@@ -97,6 +101,9 @@ class User(object):
     def __repr__(self):
         return '<User: login=%s last_online=%s>' % (
             repr(self.login), self.last_online)
+
+    def __hash__(self):
+        return hash('USER-%s' % self.login)
 
     def destroy(self):
         print self, 'DISCONNECTED'

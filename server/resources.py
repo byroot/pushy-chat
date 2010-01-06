@@ -126,4 +126,4 @@ class Quit(resource.Resource):
 
     @JSONRequest.action
     def render_POST(self, request):
-        request.chan.remove_listener(request.user)
+        request.user.quit(request.chan)
