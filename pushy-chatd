@@ -25,7 +25,12 @@ case $1 in
         [ -e $pidfile ] && kill -0 `cat $pidfile` > /dev/null && echo '- started' || echo '- stoped'
     ;;
     
+    'dev')
+        twistd -noy $bootstrap
+    ;;
+    
     *)
         echo "Usage: $0 start|stop|restart|status"
     ;;
+    
 esac
