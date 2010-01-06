@@ -19,15 +19,16 @@ function pushConnect(url, callback) {
 
 
 function Class(klass) {
-    
-    klass.New = function() {
-        var self = $.extend($('<' + klass.tag + '>'), klass)
+    return function() {
+        if (klass.tag) {
+            var self = $.extend($('<' + klass.tag + '>'), klass);
+        } else {
+            var self = _.extend({}, klass);
+        }
         _.bindAll(self);
         self.initialize.apply(self, arguments);
         return self;
     };
-    
-    return klass;
 }
 
 var Message = Class({
@@ -66,11 +67,11 @@ var ChatWindow = Class({
     },
     
     appendMessage: function(message) {
-        this.messageList.append(Message.New(message.login, message.body));
+        this.messageList.append(Message(message.login, message.body));
     },
     
     appendNotification: function(message) {
-        this.messageList.append(Notification.New(message));
+        this.messageList.append(Notification(message));
     }
     
 });
@@ -85,7 +86,7 @@ var WindowContainer = Class({
     },
     
     append: function(chan) {
-        $(this).append(this.windows[chan] = ChatWindow.New(this, chan));
+        $(this).append(this.windows[chan] = ChatWindow(this, chan));
         return this.windows[chan];
     },
     
@@ -160,7 +161,7 @@ var UserListContainer = Class({
     },
     
     append: function(chan) {
-        $(this).append(this.lists[chan] = UserList.New(this, chan));
+        $(this).append(this.lists[chan] = UserList(this, chan));
         return this.lists[chan];
     },
     
@@ -228,7 +229,7 @@ var TabList = Class({
     },
     
     append: function(chan) {
-        $(this).find('#close-tab').before(this.tabs[chan] = Tab.New(this.client, chan));
+        $(this).find('#close-tab').before(this.tabs[chan] = Tab(this.client, chan));
         return this.tabs[chan];
     },
     
@@ -341,16 +342,16 @@ var Client = Class({
     },
     
     askLogin: function() {
-        this.loginForm = LoginForm.New(this.connect, this);
+        this.loginForm = LoginForm(this.connect, this);
         this.append(this.loginForm);
     },
 
     buildInterface: function() {
         var children = [
-            this.windowContainer = WindowContainer.New(this),
-            this.userListContainer = UserListContainer.New(this),
-            this.tabList = TabList.New(this),
-            this.messageForm = MessageForm.New(this)
+            this.windowContainer = WindowContainer(this),
+            this.userListContainer = UserListContainer(this),
+            this.tabList = TabList(this),
+            this.messageForm = MessageForm(this)
         ];
         $(this).empty();
         _.each(children, _.bind(function(c) { $(this).append(c) }, this));
@@ -448,7 +449,7 @@ var Client = Class({
 
 jQuery(function($){
     jQuery.enableAjaxStream(true);
-    var client = Client.New();
+    var client = Client();
     $('body').append(client);
     client.loginForm.focus();
 });

@@ -1,3 +1,5 @@
 features:
   - Private chans
 
+refatoring:
+  - Split interface in smartest classes
