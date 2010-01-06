@@ -90,7 +90,8 @@ class User(object):
 
     def quit(self, chan):
         chan.remove_listener(self)
-        self.channels.remove(chan)
+        if chan in self.channels:
+            self.channels.remove(chan)
 
     def add_event(self, event):
         if self.connected:
