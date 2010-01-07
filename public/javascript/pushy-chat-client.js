@@ -339,7 +339,7 @@ var MessageForm = Class({
     initialize: function(client) {
         $(this).attr('id', 'message-form');
         this.client = client;
-        this.form = $('<form>').submit(this.send).keypress(this.complete);
+        this.form = $('<form>').submit(eventFunction(this.send)).keypress(this.complete);
         this.messageField = $('<input id="message" type="text" name="message">').appendTo(this.form);
         $('<input type="submit">').appendTo(this.form);
         this.form.appendTo(this);
@@ -390,13 +390,7 @@ var MessageForm = Class({
     },
     
     send: function(event) {
-        event.preventDefault();
-        this.client.send(
-            this.client.chans.get(),
-            this.messageField.val(), 
-            this.clear
-        );
-        return false;
+        this.client.send(this.messageField.val(), this.clear);
     }
     
 });
@@ -463,11 +457,6 @@ var Client = Class({
         return '/chat/' + (action || '');
     },
     
-    open: function(chan) {
-        if (!chan || _(this.tabList.tabs).chain().keys().include(chan).value()) return;
-        _.invoke([this.tabList, this.userListContainer, this.windowContainer], 'append', chan);
-    },
-    
     join: function(chan_name) {
         var chan = this.chans.select(chan_name);
         var callback = function(data) { chan.setListeners(data.listeners) };
@@ -478,8 +467,8 @@ var Client = Class({
         jQuery.post(this.url('quit'), { chan: chan.name });
     },
     
-    send: function(chan, body, callback) {
-        jQuery.post(this.url('send'), { body: body, chan: chan.name }, callback);
+    send: function(body, callback) {
+        jQuery.post(this.url('send'), { body: body, chan: this.chans.get().name }, callback);
     }
     
 });
