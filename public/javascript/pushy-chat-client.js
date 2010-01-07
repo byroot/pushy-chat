@@ -292,8 +292,8 @@ var TabContainer = Class({
     },
     
     select: function(chan_name) {
-        $('#tablist > .tab').removeClass('selected');
-        $('#tablist > #tab-' + chan_name).addClass('selected');        
+        $('#tablist > .tab').removeClass('selected')
+            .filter('#tab-' + chan_name).addClass('selected');
     }
     
 });
