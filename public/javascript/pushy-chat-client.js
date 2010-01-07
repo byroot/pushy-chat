@@ -40,12 +40,13 @@ function Class(klass) {
 
 var Message = Class({
     tag: 'li',
-    
+
     initialize: function(login, body) {
         $(this).addClass('message')
             .append($('<span>').addClass('login').text('<' + login + '> '))
             .append($('<span>').addClass('message-body').text(body));
     }
+
 });
 
 var Notification = Class({
@@ -55,40 +56,38 @@ var Notification = Class({
        user_connect: _.template('* <%= login %> has join this channel'),
        user_disconnect: _.template('* <%= login %> has quit this channel')
    },
-   
+
    initialize: function(message) {
        $(this).addClass('notification')
         .text(this.templates[message.type](message));
    }
-    
+
 });
 
 var ChatWindow = Class({
     tag: 'div',
-    
-    initialize: function(client, chan) {
-        this.client = client;
+
+    initialize: function(chan) {
         this.chan = chan;
         $(this).addClass('window').attr('id', 'window-' + chan.name);
         this.messageList = $('<ul>').addClass('message-list').appendTo(this);
     },
-    
+
     appendMessage: function(message) {
         this.messageList.append(Message(message.login, message.body));
     },
-    
+
     appendNotification: function(message) {
         this.messageList.append(Notification(message));
     }
-    
+
 });
 
 var UserList = Class({
     tag: 'ul',
     
-    initialize: function(client, chan) {
+    initialize: function(chan) {
         this.attr('id', 'user-list-' + chan.name).addClass('user-list');
-        this.client = client;
         this.chan = chan;
         this.logins = [];
     },
@@ -116,13 +115,13 @@ var UserList = Class({
         this.logins = _(this.logins).without(login);
         this.sync();
     }
-    
+
 });
 
 var Tab = Class({
     tag: 'li',
     
-    initialize: function(client, chan) {
+    initialize: function(chan, client) {
         this.attr('id', 'tab-' + chan.name).addClass('tab');
         this.chan = chan;
         this.client = client;
@@ -132,8 +131,8 @@ var Tab = Class({
     
     activate: function() {
         this.client.chans.select(this.chan.name);
-    },
-    
+    }
+
 })
 
 var Chan = Class({
@@ -143,9 +142,9 @@ var Chan = Class({
         this.client = client;
         this.name = name;
         this.elements = _([
-            this.tab = Tab(client, this),
-            this.window = ChatWindow(client, this),
-            this.userList = UserList(client, this)
+            this.tab = Tab(this, client),
+            this.window = ChatWindow(this),
+            this.userList = UserList(this)
         ]);
         this.appendTo(container);
     },
@@ -187,6 +186,7 @@ var Chan = Class({
         this.userList.removeLogin(message.login);
         this.window.appendNotification(message);
     }
+
 });
 
 var WindowContainer = Class({
@@ -203,7 +203,7 @@ var WindowContainer = Class({
     select: function(chan) {
         $('#window-container > .window').hide().filter('#window-' + chan).show();
     }
-    
+
 });
 
 
@@ -240,7 +240,7 @@ var NewTabDialog = Class({
         $.ui.dialog.defaults.bgiframe = true;
         $(this).attr('title', 'Chan name').append(form).dialog()
             .find(':input[name=chan]').focus();
-    },
+    }
 
 });
 
@@ -421,6 +421,7 @@ var LoginForm = Class({
     focus: function() {
         $(this).find(':input[name=login]').focus();
     }
+    
 });
 
 var Client = Class({
