@@ -269,21 +269,25 @@ var TabContainer = Class({
         $(this).attr('id', 'tablist');
         this.client = client;
         this.tabs = {};
-        var item = function(label) { 
-            var tpl = _.template('<li id="<%= id %>"><button><%= label %></button></li>');
-            return tpl({ label: label, id: label.replace(' ', '-').toLowerCase() });
-        };
-        this.newTabAction = $(item('New tab')).click(container.open).appendTo(this);
-        this.closeTabAction = $(item('Close tab')).click(container.close).appendTo(this);
+        this.newTabAction = $(this.item('New tab')).click(container.open).appendTo(this);
+        this.closeTabAction = $(this.item('Close tab')).click(container.close).appendTo(this);
+    },
+    
+    item: function(label) { 
+        var tpl = _.template('<li id="<%= id %>"><button><%= label %></button></li>');
+        return tpl({ label: label, id: label.replace(' ', '-').toLowerCase() });
     },
     
     append: function(tab) {
         $(this).find('#close-tab').before(tab);
     },
     
-    remove: function(chan_name) {
+    getFallbackTab: function() {
         var tab = $(this).find('.tab.selected');
-        this.client.chans.select(tab.prev('.tab').text() || tab.next('.tab').text());
+        return tab.prev('.tab').text() || tab.next('.tab').text() || null
+    },
+    
+    remove: function(chan_name) {
         $(this).find('#tab-' + chan_name).remove();
     },
     
@@ -322,6 +326,8 @@ var ChanContainer = Class({
     },
     
     remove: function(chan_name) {
+        var nextTab = this.tabs.getFallbackTab();
+        if (nextTab) this.select(nextTab);
         this.containers.invoke('remove', chan_name);
         delete this.chans[chan_name];
         if (_(this.chans).isEmpty()) {
