@@ -126,10 +126,10 @@ var Tab = Class({
         this.chan = chan;
         this.client = client;
         $(this).append($('<button>').text(chan.name));
-        $(this).click(this.activate);
+        $(this).click(this.select);
     },
     
-    activate: function() {
+    select: function() {
         this.client.chans.select(this.chan.name);
     }
 
@@ -137,12 +137,11 @@ var Tab = Class({
 
 var Chan = Class({
     
-    initialize: function(client, container, name) {
+    initialize: function(container, name) {
         this.container = container;
-        this.client = client;
         this.name = name;
         this.elements = _([
-            this.tab = Tab(this, client),
+            this.tab = Tab(this, container.client),
             this.window = ChatWindow(this),
             this.userList = UserList(this)
         ]);
@@ -308,8 +307,10 @@ var ChanContainer = Class({
     remove: function(chan_name) {
         var nextTab = this.tabs.getFallbackTab();
         if (nextTab) this.select(nextTab);
+        
         this.containers.invoke('remove', chan_name);
         delete this.chans[chan_name];
+        
         if (_(this.chans).isEmpty()) {
             this.client.messageForm.disable();
         }
