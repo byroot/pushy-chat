@@ -17,6 +17,13 @@ function pushConnect(url, callback) {
     startStream();
 }
 
+function eventFunction(method, binding) {
+    return _(_(method).bind(binding || window)).wrap(function(func, event) {
+        event.preventDefault();
+        func(event);
+        return false;
+    });
+}
 
 function Class(klass) {
     return function() {
@@ -234,6 +241,27 @@ var UserListContainer = Class({
     
 });
 
+var NewTabDialog = Class({
+    tag: 'div',
+    
+    initialize: function(callback) {
+        var form = $('<form>').submit(eventFunction(function(event) {
+            var chan_name = form.find(':input[name=chan]').val();
+            _.defer(function() { callback(chan_name); });
+            $(this).dialog('close');
+        }, this));
+        form.append($('<p><input name="chan" type="text"/></p>'));
+        form.append($('<p><input type="submit"></p>'));
+        
+        $.ui.dialog.defaults.bgiframe = true;
+        $(this).attr('title', 'Chan name').append(form).dialog()
+            .find(':input[name=chan]').focus();
+    },
+    
+    
+    
+});
+
 var TabContainer = Class({
     tag: 'ul',
     
@@ -245,7 +273,7 @@ var TabContainer = Class({
             var tpl = _.template('<li id="<%= id %>"><button><%= label %></button></li>');
             return tpl({ label: label, id: label.replace(' ', '-').toLowerCase() });
         };
-        this.newTabAction = $(item('New tab')).click(this.askChanName).appendTo(this);
+        this.newTabAction = $(item('New tab')).click(this.openTab).appendTo(this);
         this.closeTabAction = $(item('Close tab')).click(this.closeTab).appendTo(this);
 
     },
@@ -254,22 +282,8 @@ var TabContainer = Class({
         this.client.quit(this.client.chans.get());
     },
     
-    askChanName: function(event) {
-        var client = this.client;
-        var form = $('<form>').submit(function(event) {
-            event.preventDefault();
-            
-            var chan_name = $(this).find(':input[name=chan]').val();
-            _.defer(function() { client.join(chan_name); });
-            $(this).parent('div').dialog('close');
-            
-            return false;
-        });
-        form.append($('<p><input name="chan" type="text"/></p>'));
-        form.append($('<p><input type="submit"></p>'));
-        
-        $.ui.dialog.defaults.bgiframe = true;
-        $('<div title="Chan name">').append(form).dialog().find(':input[name=chan]').focus();
+    openTab: function(event) {
+        NewTabDialog(this.client.join);
     },
     
     append: function(tab) {
@@ -409,20 +423,11 @@ var LoginForm = Class({
         $('<label for="login">').text("Login:").appendTo(this);
         $('<input name="login" type="text">').appendTo(this);
         $('<input name="connect" type="submit">').appendTo(this);
-        this.submit(function(event) {
-            event.preventDefault();
-            
+        this.submit(eventFunction(function(event) {
             var login = $(this).find(':input[name=login]').val();
-            if (login) {
-                _.defer(_(function() {
-                    $(this).remove();
-                    callback(login);
-                }).bind(this));
-
-            }
-            
-            return false;
-        })
+            if (!login) return;
+            _.defer(_(function() { $(this).remove(); callback(login); }).bind(this));
+        }, this));
         $(parentNode).append(this);
         this.focus();
     },
