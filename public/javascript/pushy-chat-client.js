@@ -151,6 +151,10 @@ var Chan = Class({
         this.appendTo(container);
     },
     
+    getLogins: function() {
+      return _.clone(this.userList.logins);
+    },
+    
     appendTo: function(chanContainer) {
         chanContainer.tabs.append(this.tab);
         chanContainer.windows.append(this.window);
@@ -208,9 +212,7 @@ var WindowContainer = Class({
     },
     
     select: function(chan) {
-        this.activeWindow = this.windows[chan];
-        $('#window-container > .window').hide();
-        $('#window-container > #window-' + chan).show();
+        $('#window-container > .window').hide().filter('#window-' + chan).show();
     }
     
 });
@@ -225,18 +227,13 @@ var UserListContainer = Class({
         this.lists = {};
     },
     
-    getCurrentLogins: function() {
-      return _.clone(this.activeList.logins);
-    },
-    
     remove: function(chan) {
         $(this).find('#user-list-' + chan).remove();
     },
     
     select: function(chan) {
-        this.activeList = this.lists[chan];
-        $('#user-list-container > .user-list').hide();
-        $('#user-list-container > #user-list-' + chan).show();
+        $('#user-list-container > .user-list').hide()
+            .filter('#user-list-' + chan).show();
     }
     
 });
@@ -257,9 +254,7 @@ var NewTabDialog = Class({
         $(this).attr('title', 'Chan name').append(form).dialog()
             .find(':input[name=chan]').focus();
     },
-    
-    
-    
+
 });
 
 var TabContainer = Class({
@@ -373,7 +368,7 @@ var MessageForm = Class({
         var content = this.messageField.val();
         var isFirstWord = !content.match(/ /);
         var toComplete = content.split(/ /).pop();
-        var loginList = this.client.userListContainer.getCurrentLogins();
+        var loginList = this.client.chans.get().getLogins();
         var mask = RegExp('^' + toComplete);
         
         var matchingLogins = _(loginList).select(function(l) { return !!l.match(mask); });
