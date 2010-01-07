@@ -193,24 +193,14 @@ var Chan = Class({
 var WindowContainer = Class({
     tag: 'div',
     
-    initialize: function(client) {
-        this.windows = {};
-        this.client = client;
+    initialize: function() {
         $(this).attr('id', 'window-container');
     },
     
     remove: function(chan) {
         $(this).find('#window-' + chan).remove()
     },
-    
-    appendMessage: function(message) {
-        this.windows[message.chan].appendMessage(message);
-    },
-    
-    appendNotification: function(message) {
-        this.windows[message.chan].appendNotification(message);        
-    },
-    
+
     select: function(chan) {
         $('#window-container > .window').hide().filter('#window-' + chan).show();
     }
@@ -221,10 +211,8 @@ var WindowContainer = Class({
 var UserListContainer = Class({
     tag: 'div',
     
-    initialize: function(client) {
+    initialize: function() {
         this.attr('id', 'user-list-container');
-        this.client = client;
-        this.lists = {};
     },
     
     remove: function(chan) {
@@ -260,10 +248,8 @@ var NewTabDialog = Class({
 var TabContainer = Class({
     tag: 'ul',
     
-    initialize: function(client, container) {
+    initialize: function(container) {
         $(this).attr('id', 'tablist');
-        this.client = client;
-        this.tabs = {};
         this.newTabAction = $(this.item('New tab')).click(container.open).appendTo(this);
         this.closeTabAction = $(this.item('Close tab')).click(container.close).appendTo(this);
     },
@@ -299,9 +285,9 @@ var ChanContainer = Class({
         this.client = client;
         this.chans = {};
         this.containers = _([
-            this.tabs = TabContainer(client, this),
-            this.windows = WindowContainer(client, this),
-            this.userLists = UserListContainer(client, this)
+            this.tabs = TabContainer(this),
+            this.windows = WindowContainer(),
+            this.userLists = UserListContainer()
         ]);
         this.containers.invoke('appendTo', client);
     },
