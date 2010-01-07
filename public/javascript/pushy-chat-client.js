@@ -99,8 +99,7 @@ var UserList = Class({
     
     sync: function() {
         this.clean();
-        $(this).empty();
-        _(this.logins).each(_.bind(function(l) { $(this).append($('<li>').text(l)) }, this));
+        $(this).empty().append(_(this.logins).map(function(l) { return $('<li>').text(l)[0] }));
     },
     
     updateLogins: function(logins) {
@@ -320,7 +319,7 @@ var ChanContainer = Class({
     select: function(chan_name) {
         this.currentChan = this.get(chan_name).show();
         this.containers.invoke('select', chan_name);
-        return this;
+        return this.currentChan;
     },
     
     close: function(event) {
@@ -469,7 +468,7 @@ var Client = Class({
     },
     
     join: function(chan_name) {
-        var chan = this.chans.select(chan_name).currentChan;
+        var chan = this.chans.select(chan_name);
         var callback = function(data) { chan.setListeners(data.listeners) };
         jQuery.post(this.url('join'), { chan: chan.name }, callback, 'json');
     },
