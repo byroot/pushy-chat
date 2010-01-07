@@ -265,7 +265,7 @@ var NewTabDialog = Class({
 var TabContainer = Class({
     tag: 'ul',
     
-    initialize: function(client) {
+    initialize: function(client, container) {
         $(this).attr('id', 'tablist');
         this.client = client;
         this.tabs = {};
@@ -273,17 +273,8 @@ var TabContainer = Class({
             var tpl = _.template('<li id="<%= id %>"><button><%= label %></button></li>');
             return tpl({ label: label, id: label.replace(' ', '-').toLowerCase() });
         };
-        this.newTabAction = $(item('New tab')).click(this.openTab).appendTo(this);
-        this.closeTabAction = $(item('Close tab')).click(this.closeTab).appendTo(this);
-
-    },
-    
-    closeTab: function(event) {
-        this.client.quit(this.client.chans.get());
-    },
-    
-    openTab: function(event) {
-        NewTabDialog(this.client.join);
+        this.newTabAction = $(item('New tab')).click(container.open).appendTo(this);
+        this.closeTabAction = $(item('Close tab')).click(container.close).appendTo(this);
     },
     
     append: function(tab) {
@@ -309,9 +300,9 @@ var ChanContainer = Class({
         this.client = client;
         this.chans = {};
         this.containers = _([
-            this.tabs = TabContainer(client),
-            this.windows = WindowContainer(client),
-            this.userLists = UserListContainer(client)
+            this.tabs = TabContainer(client, this),
+            this.windows = WindowContainer(client, this),
+            this.userLists = UserListContainer(client, this)
         ]);
         this.containers.invoke('appendTo', client);
     },
@@ -343,6 +334,15 @@ var ChanContainer = Class({
         this.currentChan = this.get(chan_name).show();
         this.containers.invoke('select', chan_name);
         return this;
+    },
+    
+    close: function(event) {
+        this.client.quit(this.get());
+        this.remove(this.get().name);
+    },
+    
+    open: function(event) {
+        NewTabDialog(this.client.join);
     }
     
 });
@@ -489,7 +489,6 @@ var Client = Class({
     
     quit: function(chan) {
         jQuery.post(this.url('quit'), { chan: chan.name });
-        this.chans.remove(chan.name);
     },
     
     send: function(chan, body, callback) {
