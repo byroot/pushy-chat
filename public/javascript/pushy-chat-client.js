@@ -233,8 +233,7 @@ var NewTabDialog = Class({
             _.defer(function() { callback(chan_name); });
             $(this).dialog('close');
         }, this));
-        form.append($('<p><input name="chan" type="text"/></p>'));
-        form.append($('<p><input type="submit"></p>'));
+        form.append('<p><input name="chan" type="text"/></p><p><input type="submit"></p>');
         
         $.ui.dialog.defaults.bgiframe = true;
         $(this).attr('title', 'Chan name').append(form).dialog()
@@ -343,11 +342,9 @@ var MessageForm = Class({
     initialize: function(client) {
         $(this).attr('id', 'message-form');
         this.client = client;
+        this.messageField = $('<input id="message" type="text" name="message">');
         this.form = $('<form>').submit(eventFunction(this.send)).keypress(this.complete);
-        this.messageField = $('<input id="message" type="text" name="message">').appendTo(this.form);
-        $('<input type="submit">').appendTo(this.form);
-        this.form.appendTo(this);
-        this.appendTo(client);
+        this.append(this.form.append(this.messageField, '<input type="submit">')).appendTo(client);
         this.disable();
     },
     
@@ -403,9 +400,9 @@ var LoginForm = Class({
     
     initialize: function(parentNode, callback) {
         this.action = '#';
-        $('<label for="login">').text("Login:").appendTo(this);
-        $('<input name="login" type="text">').appendTo(this);
-        $('<input name="connect" type="submit">').appendTo(this);
+        this.append('<label for="login">Login:</label>',
+                     '<input name="login" type="text">',
+                     '<input name="connect" type="submit">');
         this.submit(eventFunction(function(event) {
             var login = $(this).find(':input[name=login]').val();
             if (!login) return;
