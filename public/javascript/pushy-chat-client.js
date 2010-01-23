@@ -282,6 +282,7 @@ var ChanContainer = Class({
     initialize: function(client) {
         this.client = client;
         this.chans = {};
+        this.messageForm = MessageForm(this.client);
         this.containers = _([
             this.tabs = TabContainer(this),
             this.windows = WindowContainer(),
@@ -297,7 +298,7 @@ var ChanContainer = Class({
         
         if (_(this.chans[chan_name]).isUndefined()) {
             if (_(this.chans).isEmpty()) {
-                this.client.messageForm.enable();
+                this.messageForm.enable();
             }
             this.chans[chan_name] = Chan(this, chan_name)
         }
@@ -312,7 +313,7 @@ var ChanContainer = Class({
         delete this.chans[chan_name];
         
         if (_(this.chans).isEmpty()) {
-            this.client.messageForm.disable();
+            this.messageForm.disable();
             $('li#new-tab > button').focus();
         }
         return this;
@@ -321,7 +322,7 @@ var ChanContainer = Class({
     select: function(chan_name) {
         this.currentChan = this.get(chan_name).show();
         this.containers.invoke('select', chan_name);
-        this.client.messageForm.focus();
+        this.messageForm.focus();
         return this.currentChan;
     },
     
@@ -426,7 +427,6 @@ var Client = Class({
     initialize: function(parentNode, login) {
         this.login = login;
         this.chans = ChanContainer(this);
-        this.messageForm = MessageForm(this)
         $(parentNode).append($(this));
         $('li#new-tab > button').focus();
         this.connect();
