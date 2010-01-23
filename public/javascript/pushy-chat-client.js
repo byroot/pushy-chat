@@ -313,6 +313,7 @@ var ChanContainer = Class({
         
         if (_(this.chans).isEmpty()) {
             this.client.messageForm.disable();
+            $('li#new-tab > button').focus();
         }
         return this;
     },
@@ -320,6 +321,7 @@ var ChanContainer = Class({
     select: function(chan_name) {
         this.currentChan = this.get(chan_name).show();
         this.containers.invoke('select', chan_name);
+        this.client.messageForm.focus();
         return this.currentChan;
     },
     
@@ -383,7 +385,6 @@ var MessageForm = Class({
     
     disable: function() {
         this.find('input').attr('disabled', 'disabled');
-        $('li#new-tab > button').focus();
     },
     
     enable: function() {
