@@ -299,7 +299,7 @@ var ChanContainer = Class({
             if (_(this.chans).isEmpty()) {
                 this.client.messageForm.enable();
             }
-            this.chans[chan_name] = Chan(this.client, this, chan_name)
+            this.chans[chan_name] = Chan(this, chan_name)
         }
         return this.chans[chan_name];
     },
