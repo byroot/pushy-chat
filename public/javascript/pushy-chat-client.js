@@ -33,7 +33,7 @@ function Class(klass) {
         _.bindAll(self);
         if (klass.tag) { // extended DOM object
             _(EVENT_METHODS.intersect(_(self).functions())).each(function(method) {
-                $(self)[method](eventFunction(self[method]));
+                $(self).bind(method, eventFunction(self[method]));
             });
         }
         self.initialize.apply(self, arguments);
@@ -129,10 +129,9 @@ var Tab = Class({
         this.chan = chan;
         this.client = client;
         $(this).append($('<button>').text(chan.name));
-        $(this).click(this.select);
     },
     
-    select: function() {
+    click: function(event) {
         this.client.chans.select(this.chan.name);
     }
 
@@ -231,16 +230,15 @@ var NewTabDialog = Class({
     tag: 'div',
     
     initialize: function(callback) {
-        var form = $('<form>').submit(eventFunction(function(event) {
-            var chan_name = form.find(':input[name=chan]').val();
-            _.defer(function() { callback(chan_name); });
-            $(this).dialog('close');
-        }, this));
-        form.append('<p><input name="chan" type="text"/></p><p><input type="submit"></p>');
-        
-        $.ui.dialog.defaults.bgiframe = true;
+        this.callback = callback;
+        var form = $('<form>').append('<p><input name="chan" type="text"/></p><p><input type="submit"></p>');
         $(this).attr('title', 'Chan name').append(form).dialog()
             .find(':input[name=chan]').focus();
+    },
+    
+    submit: function(event) {
+        var chan_name = this.dialog('close').find(':input[name=chan]').val();
+        this.callback(chan_name);
     }
 
 });
@@ -346,7 +344,7 @@ var MessageForm = Class({
         $(this).attr('id', 'message-form');
         this.client = client;
         this.messageField = $('<input id="message" type="text" name="message">');
-        this.form = $('<form>').submit(eventFunction(this.send)).keypress(this.complete);
+        this.form = $('<form>').keypress(this.complete);
         this.append(this.form.append(this.messageField, '<input type="submit">')).appendTo(client);
         this.disable();
     },
@@ -392,7 +390,7 @@ var MessageForm = Class({
         this.find('input').attr('disabled', '');
     },
     
-    send: function(event) {
+    submit: function(event) {
         this.client.send(this.messageField.val(), this.clear);
     }
     
@@ -402,7 +400,6 @@ var LoginForm = Class({
     tag: 'form',
     
     initialize: function(parentNode, callback) {
-        //this.submit(eventFunction(, this));
         this.callback = callback;
         this.action = '#';
         this.append('<label for="login">Login:</label>',
@@ -479,6 +476,7 @@ var Client = Class({
 
 
 jQuery(function($){
+    jQuery.ui.dialog.defaults.bgiframe = true;
     jQuery.enableAjaxStream(true);
     
     LoginForm('body', function(login) {
