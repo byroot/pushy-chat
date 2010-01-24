@@ -1,4 +1,4 @@
-var EVENT_METHODS = _(['submit', 'click']);
+var EVENT_METHODS = _(['submit', 'click', 'keypress']);
     
 function pushConnect(url, callback) {
     function parsePackets(packet, status, fulldata, xhr) {
@@ -20,9 +20,7 @@ function pushConnect(url, callback) {
 
 function eventFunction(method, binding) {
     return _(_(method).bind(binding || window)).wrap(function(func, event) {
-        event.preventDefault();
-        func(event);
-        return false;
+        return func(event) || false;
     });
 }
 
@@ -344,13 +342,17 @@ var MessageForm = Class({
         $(this).attr('id', 'message-form');
         this.client = client;
         this.messageField = $('<input id="message" type="text" name="message">');
-        this.form = $('<form>').keypress(this.complete);
-        this.append(this.form.append(this.messageField, '<input type="submit">')).appendTo(client);
+        this.append($('<form>').append(this.messageField, '<input type="submit">')).appendTo(client);
         this.disable();
     },
     
+    keypress: function(event) {
+        if (event.which != 0) return true;
+        this.complete();
+        return false;
+    },
+    
     complete: function(event) {
-        if (event.keyCode != 9) return true;
         
         var content = this.messageField.val();
         var isFirstWord = !content.match(/ /);
@@ -369,8 +371,6 @@ var MessageForm = Class({
                 .flatten().join('').value();
         }
         this.messageField.val(content.replace(toComplete, replacement));
-        
-        return false;
     },
     
     focus: function() {
