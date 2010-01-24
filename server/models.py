@@ -4,6 +4,7 @@ import time
 from itertools import chain
 
 from server.events import Message, UserConnect, UserDisconnect, UserRenamed
+from server.client import IRCTransportFactory
 
 
 class Channel(object):
@@ -43,6 +44,8 @@ class Channel(object):
 class User(object):
 
     def __init__(self, login, first_connection=True):
+        IRCTransportFactory.connect(self)
+        self.irc_transport = None
         self.request = None
         self._last_online = None
         self.first_connection = first_connection
@@ -84,9 +87,15 @@ class User(object):
             return int(time.time() - self._last_online)
         return 0
 
+    def update_irc_transport(self, instance):
+        print 'Set irc_transport'
+        self.irc = instance
+
+    def say(self, chan, message):
+        self.irc.say(chan.name, message)
+
     def join(self, chan):
-        chan.add_listener(self)
-        self.channels.add(chan)
+        self.irc.join(chan.name)
 
     def quit(self, chan):
         chan.remove_listener(self)

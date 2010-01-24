@@ -106,11 +106,11 @@ class Login(resource.Resource):
         # TODO: handle possible errors like nickname already in use
 
 
-class Send(resource.Resource):
+class Say(resource.Resource):
 
     @JSONRequest.action
     def render_POST(self, request):
-        request.chan.post_message(request.user, request.args['body'][0])
+        request.user.say(request.chan, request.args['body'][0])
 
 
 class Join(resource.Resource):
@@ -119,7 +119,7 @@ class Join(resource.Resource):
     def render_POST(self, request):
         request.setHeader('Content-Type', 'application/json, text/javascript')
         request.user.join(request.chan)
-        return {'listeners': [u.login for u in request.chan.listeners]}
+        return {'listeners': [self.user.login]} # FIXME: find chan's user list
 
 
 class Quit(resource.Resource):

@@ -390,7 +390,7 @@ var MessageForm = Class({
     },
     
     submit: function(event) {
-        this.client.send(this.messageField.val(), this.clear);
+        this.client.say(this.messageField.val(), this.clear);
     }
     
 });
@@ -467,8 +467,8 @@ var Client = Class({
         jQuery.post(this.url('quit'), { chan: chan.name });
     },
     
-    send: function(body, callback) {
-        jQuery.post(this.url('send'), { body: body, chan: this.chans.get().name }, callback);
+    say: function(body, callback) {
+        jQuery.post(this.url('say'), { body: body, chan: this.chans.get().name }, callback);
     }
     
 });
