@@ -399,16 +399,17 @@ var LoginForm = Class({
     tag: 'form',
     
     initialize: function(parentNode, callback) {
-        this.action = '#';
-        this.append('<label for="login">Login:</label>',
-                     '<input name="login" type="text">',
-                     '<input name="connect" type="submit">');
         this.submit(eventFunction(function(event) {
             var login = $(this).find(':input[name=login]').val();
             if (!login) return;
             _.defer(_(function() { $(this).remove(); callback(login); }).bind(this));
         }, this));
-        $(parentNode).append(this);
+
+        this.action = '#';
+        this.append('<label for="login">Login:</label>',
+                     '<input name="login" type="text">',
+                     '<input name="connect" type="submit">')
+            .appendTo(parentNode);
         this.focus();
     },
     
