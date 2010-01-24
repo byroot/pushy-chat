@@ -195,7 +195,7 @@ var WindowContainer = Class({
     },
     
     remove: function(chan) {
-        this.find('#window-' + chan).remove()
+        this.find('#window-' + chan).remove();
     },
 
     select: function(chan) {
@@ -297,7 +297,7 @@ var ChanContainer = Class({
             if (_(this.chans).isEmpty()) {
                 this.messageForm.enable();
             }
-            this.chans[chan_name] = Chan(this, chan_name)
+            this.chans[chan_name] = Chan(this, chan_name);
         }
         return this.chans[chan_name];
     },
