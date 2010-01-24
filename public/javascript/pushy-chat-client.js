@@ -1,4 +1,5 @@
-
+var EVENT_METHODS = _(['submit', 'click']);
+    
 function pushConnect(url, callback) {
     function parsePackets(packet, status, fulldata, xhr) {
         _(packet.match(/\(\{[^\)]*\}\)/g)).chain().toArray().each(function(json) {
@@ -27,12 +28,14 @@ function eventFunction(method, binding) {
 
 function Class(klass) {
     return function() {
-        if (klass.tag) {
-            var self = $.extend($('<' + klass.tag + '>'), klass);
-        } else {
-            var self = _.extend({}, klass);
-        }
+        var base = klass.tag ? $('<' + klass.tag + '>') : {};
+        var self = $.extend(base, klass);
         _.bindAll(self);
+        if (klass.tag) { // extended DOM object
+            _(EVENT_METHODS.intersect(_(self).functions())).each(function(method) {
+                $(self)[method](eventFunction(self[method]));
+            });
+        }
         self.initialize.apply(self, arguments);
         return self;
     };
@@ -399,12 +402,8 @@ var LoginForm = Class({
     tag: 'form',
     
     initialize: function(parentNode, callback) {
-        this.submit(eventFunction(function(event) {
-            var login = $(this).find(':input[name=login]').val();
-            if (!login) return;
-            _.defer(_(function() { $(this).remove(); callback(login); }).bind(this));
-        }, this));
-
+        //this.submit(eventFunction(, this));
+        this.callback = callback;
         this.action = '#';
         this.append('<label for="login">Login:</label>',
                      '<input name="login" type="text">',
@@ -415,6 +414,11 @@ var LoginForm = Class({
     
     focus: function() {
         $(this).find(':input[name=login]').focus();
+    },
+    
+    submit: function(event) {
+        var login = $(this).find(':input[name=login]').val();
+        login && this.remove().callback(login);
     }
     
 });
