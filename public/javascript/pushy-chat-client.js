@@ -43,7 +43,7 @@ var Message = Class({
     tag: 'li',
 
     initialize: function(login, body) {
-        $(this).addClass('message')
+        this.addClass('message')
             .append($('<span>').addClass('login').text('<' + login + '> '))
             .append($('<span>').addClass('message-body').text(body));
     }
@@ -59,8 +59,7 @@ var Notification = Class({
    },
 
    initialize: function(message) {
-       $(this).addClass('notification')
-        .text(this.templates[message.type](message));
+       this.addClass('notification').text(this.templates[message.type](message));
    }
 
 });
@@ -70,7 +69,7 @@ var ChatWindow = Class({
 
     initialize: function(chan) {
         this.chan = chan;
-        $(this).addClass('window').attr('id', 'window-' + chan.name);
+        this.addClass('window').attr('id', 'window-' + chan.name);
         this.messageList = $('<ul>').addClass('message-list').appendTo(this);
     },
 
@@ -99,7 +98,7 @@ var UserList = Class({
     
     sync: function() {
         this.clean();
-        $(this).empty().append(_(this.logins).map(function(l) { return $('<li>').text(l)[0] }));
+        this.empty().append(_(this.logins).map(function(l) { return $('<li>').text(l)[0] }));
     },
     
     updateLogins: function(logins) {
@@ -126,7 +125,7 @@ var Tab = Class({
         this.attr('id', 'tab-' + chan.name).addClass('tab');
         this.chan = chan;
         this.client = client;
-        $(this).append($('<button>').text(chan.name));
+        $('<button>').text(chan.name).appendTo(this);
     },
     
     click: function(event) {
@@ -192,11 +191,11 @@ var WindowContainer = Class({
     tag: 'div',
     
     initialize: function() {
-        $(this).attr('id', 'window-container');
+        this.attr('id', 'window-container');
     },
     
     remove: function(chan) {
-        $(this).find('#window-' + chan).remove()
+        this.find('#window-' + chan).remove()
     },
 
     select: function(chan) {
@@ -214,7 +213,7 @@ var UserListContainer = Class({
     },
     
     remove: function(chan) {
-        $(this).find('#user-list-' + chan).remove();
+        this.find('#user-list-' + chan).remove();
     },
     
     select: function(chan) {
@@ -230,7 +229,7 @@ var NewTabDialog = Class({
     initialize: function(callback) {
         this.callback = callback;
         var form = $('<form>').append('<p><input name="chan" type="text"/></p><p><input type="submit"></p>');
-        $(this).attr('title', 'Chan name').append(form).dialog()
+        this.attr('title', 'Chan name').append(form).dialog()
             .find(':input[name=chan]').focus();
     },
     
@@ -245,7 +244,7 @@ var TabContainer = Class({
     tag: 'ul',
     
     initialize: function(container) {
-        $(this).attr('id', 'tablist');
+        this.attr('id', 'tablist');
         this.newTabAction = $(this.item('New tab')).click(container.open).appendTo(this);
         this.closeTabAction = $(this.item('Close tab')).click(container.close).appendTo(this);
     },
@@ -256,16 +255,16 @@ var TabContainer = Class({
     },
     
     append: function(tab) {
-        $(this).find('#close-tab').before(tab);
+        this.find('#close-tab').before(tab);
     },
     
     getFallbackTab: function() {
-        var tab = $(this).find('.tab.selected');
+        var tab = this.find('.tab.selected');
         return tab.prev('.tab').text() || tab.next('.tab').text() || null
     },
     
     remove: function(chan_name) {
-        $(this).find('#tab-' + chan_name).remove();
+        this.find('#tab-' + chan_name).remove();
     },
     
     select: function(chan_name) {
@@ -339,7 +338,7 @@ var MessageForm = Class({
     tag: 'div',
     
     initialize: function(client) {
-        $(this).attr('id', 'message-form');
+        this.attr('id', 'message-form');
         this.client = client;
         this.messageField = $('<input id="message" type="text" name="message">');
         this.append($('<form>').append(this.messageField, '<input type="submit">')).appendTo(client);
@@ -410,11 +409,11 @@ var LoginForm = Class({
     },
     
     focus: function() {
-        $(this).find(':input[name=login]').focus();
+        this.find(':input[name=login]').focus();
     },
     
     submit: function(event) {
-        var login = $(this).find(':input[name=login]').val();
+        var login = this.find(':input[name=login]').val();
         login && this.remove().callback(login);
     }
     
@@ -426,7 +425,7 @@ var Client = Class({
     initialize: function(parentNode, login) {
         this.login = login;
         this.chans = ChanContainer(this);
-        $(parentNode).append($(this));
+        this.appendTo(parentNode);
         $('li#new-tab > button').focus();
         this.connect();
     },
