@@ -1,5 +1,7 @@
 var EVENT_METHODS = _(['submit', 'click', 'keypress']);
-    
+var CHANNEL_PREFIXES = _(['&', '#', '!', '+']);
+var SANITIZE_CHAN_NAME = /[#&!+]/
+
 function pushConnect(url, callback) {
     function parsePackets(packet, status, fulldata, xhr) {
         _(packet.match(/\(\{[^\)]*\}\)/g)).chain().toArray().each(function(json) {
@@ -69,7 +71,7 @@ var ChatWindow = Class({
 
     initialize: function(chan) {
         this.chan = chan;
-        this.addClass('window').attr('id', 'window-' + chan.name);
+        this.addClass('window').attr('id', 'window-' + chan.aplha_name);
         this.messageList = $('<ul>').addClass('message-list').appendTo(this);
     },
 
@@ -87,7 +89,7 @@ var UserList = Class({
     tag: 'ul',
     
     initialize: function(chan) {
-        this.attr('id', 'user-list-' + chan.name).addClass('user-list');
+        this.attr('id', 'user-list-' + chan.alpha_name).addClass('user-list');
         this.chan = chan;
         this.logins = [];
     },
@@ -122,13 +124,14 @@ var Tab = Class({
     tag: 'li',
     
     initialize: function(chan, client) {
-        this.attr('id', 'tab-' + chan.name).addClass('tab');
+        this.attr('id', 'tab-' + chan.alpha_name).addClass('tab');
         this.chan = chan;
         this.client = client;
         $('<button>').text(chan.name).appendTo(this);
     },
     
     click: function(event) {
+        console.log('select', this.chan.name);
         this.client.chans.select(this.chan.name);
     }
 
@@ -139,6 +142,7 @@ var Chan = Class({
     initialize: function(container, name) {
         this.container = container;
         this.name = name;
+        this_alpha_name = name.replace(SANITIZE_CHAN_NAME, '');
         this.elements = _([
             this.tab = Tab(this, container.client),
             this.window = ChatWindow(this),
@@ -235,6 +239,7 @@ var NewTabDialog = Class({
     
     submit: function(event) {
         var chan_name = this.dialog('close').find(':input[name=chan]').val();
+        if (!CHANNEL_PREFIXES.include(chan_name[0])) chan_name = '#' + chan_name;
         this.callback(chan_name);
     }
 
@@ -318,14 +323,14 @@ var ChanContainer = Class({
     
     select: function(chan_name) {
         this.currentChan = this.get(chan_name).show();
-        this.containers.invoke('select', chan_name);
+        this.containers.invoke('select', this.currentChan.alpha_name);
         this.messageForm.focus();
         return this.currentChan;
     },
     
     close: function(event) {
-        this.client.left(this.get());
-        this.remove(this.get().name);
+        this.client.leave(this.get());
+        this.remove(this.get().alpha_name);
     },
     
     open: function(event) {
@@ -459,12 +464,13 @@ var Client = Class({
     
     join: function(chan_name) {
         var chan = this.chans.select(chan_name);
+        console.log(chan_name, chan.name);
         var callback = function(data) { chan.setListeners(data.listeners) };
         jQuery.post(this.url('join'), { chan: chan.name }, callback, 'json');
     },
     
-    left: function(chan) {
-        jQuery.post(this.url('left'), { chan: chan.name });
+    leave: function(chan) {
+        jQuery.post(this.url('leave'), { chan: chan.name });
     },
     
     say: function(body, callback) {

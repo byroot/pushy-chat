@@ -65,9 +65,10 @@ class User(object):
         self.irc.join(chan)
         self.channels.add(chan)
 
-    def left(self, chan):
-        self.irc.left(chan)
-        self.channels.remove(chan)
+    def leave(self, chan):
+        self.irc.leave(chan)
+        if chan in self.channels:
+            self.channels.remove(chan)
 
     def user_said(self, user, chan, message):
         self.add_event(Message(user, chan, message))

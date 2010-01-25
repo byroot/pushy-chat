@@ -113,8 +113,8 @@ class Join(resource.Resource):
         return {'listeners': [request.user.login]} # FIXME: find chan's user list
 
 
-class Left(resource.Resource):
+class Leave(resource.Resource):
 
     @JSONRequest.action
     def render_POST(self, request):
-        request.user.left(request.chan)
+        request.user.leave(request.chan)
