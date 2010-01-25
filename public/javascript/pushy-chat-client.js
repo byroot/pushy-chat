@@ -55,7 +55,7 @@ var Notification = Class({
    
    templates: {
        user_connect: _.template('* <%= login %> has join this channel'),
-       user_disconnect: _.template('* <%= login %> has quit this channel')
+       user_disconnect: _.template('* <%= login %> has left this channel')
    },
 
    initialize: function(message) {
@@ -324,7 +324,7 @@ var ChanContainer = Class({
     },
     
     close: function(event) {
-        this.client.quit(this.get());
+        this.client.left(this.get());
         this.remove(this.get().name);
     },
     
@@ -463,8 +463,8 @@ var Client = Class({
         jQuery.post(this.url('join'), { chan: chan.name }, callback, 'json');
     },
     
-    quit: function(chan) {
-        jQuery.post(this.url('quit'), { chan: chan.name });
+    left: function(chan) {
+        jQuery.post(this.url('left'), { chan: chan.name });
     },
     
     say: function(body, callback) {

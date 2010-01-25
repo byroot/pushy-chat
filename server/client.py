@@ -11,11 +11,26 @@ class IRCTransport(irc.IRCClient):
     def user(self):
         return self.factory.user
 
+    def privmsg(self, user, channel, message):
+        self.user.user_said(user, channel, message)
+
+    def noticed(self, user, channel, message):
+        self.user.user_said(user, channel, message)
+
     def signedOn(self):
         self.user.update_irc_transport(self)
 
     def joined(self, channel):
         print "Joined %s." % (channel,)
+
+    def userJoined(self, user, channel):
+        self.user.user_joined(user, chan)
+
+    def userLeft(self, user, channel):
+        self.user.user_left(user, chan)
+
+    def userQuit(self, user, channel):
+        self.user.user_left(user, chan) # TODO: disabiguation
 
 
 class IRCTransportFactory(protocol.ClientFactory):

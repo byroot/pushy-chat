@@ -5,12 +5,11 @@ import json
 from twisted.web import resource, server
 
 from server.events import Event, HoldOn
-from server.models import User, Channel
+from server.models import User
 from server.utils import JSONRequest
 
 
 class Data:
-    channels = {}
     users = {}
 
     @classmethod
@@ -25,10 +24,6 @@ class Data:
             if user.last_online > 15:
                 user.destroy()
                 cls.users.pop(login)
-
-        for chan_name, chan in cls.channels.items():
-            if not chan.has_listeners:
-                cls.channels.pop(chan_name)
 
 
 class JSONRequest(object, server.Request):
@@ -60,11 +55,7 @@ class JSONRequest(object, server.Request):
 
     @property
     def chan(self):
-        chan_name = self.args['chan'][0]
-        chan = Data.channels.get(chan_name, None)
-        if not chan:
-            chan = Data.channels[chan_name] = Channel(chan_name)
-        return chan
+        return self.args['chan'][0]
 
     @staticmethod
     def to_json(content):
@@ -97,7 +88,7 @@ class Login(resource.Resource):
         login = request.args.get('login', [None]).pop()
         if request.user and request.user.login == login:
             # MAYBE: destroy old user ?
-            return {'channels': [c.name for c in request.user.channels]}
+            return {'channels': list(request.user.channels)}
 
         request.user = Data.users[login] = User(login)
         return {'channels': []}
@@ -119,11 +110,11 @@ class Join(resource.Resource):
     def render_POST(self, request):
         request.setHeader('Content-Type', 'application/json, text/javascript')
         request.user.join(request.chan)
-        return {'listeners': [self.user.login]} # FIXME: find chan's user list
+        return {'listeners': [request.user.login]} # FIXME: find chan's user list
 
 
-class Quit(resource.Resource):
+class Left(resource.Resource):
 
     @JSONRequest.action
     def render_POST(self, request):
-        request.user.quit(request.chan)
+        request.user.left(request.chan)

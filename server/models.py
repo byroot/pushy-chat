@@ -7,40 +7,6 @@ from server.events import Message, UserConnect, UserDisconnect, UserRenamed
 from server.client import IRCTransportFactory
 
 
-class Channel(object):
-
-    def __init__(self, name):
-        self.name = name
-        self.listeners = set()
-
-    def __repr__(self):
-        return '<Channel: %s>' % self.name
-
-    def __hash__(self):
-        return hash('CHAN-%s' % self.name)
-
-    @property
-    def has_listeners(self):
-        return bool(len(self.listeners))
-
-    def add_event(self, event):
-        for user in self.listeners:
-            user.add_event(event)
-
-    def post_message(self, user, body):
-        self.add_event(Message(user, self, body))
-
-    def add_listener(self, user):
-        if user not in self.listeners:
-            self.add_event(UserConnect(user, self))
-        self.listeners.add(user)
-
-    def remove_listener(self, user):
-        if user in self.listeners:
-            self.listeners.remove(user)
-        self.add_event(UserDisconnect(user, self))
-
-
 class User(object):
 
     def __init__(self, login, first_connection=True):
@@ -92,15 +58,25 @@ class User(object):
         self.irc = instance
 
     def say(self, chan, message):
-        self.irc.say(chan.name, message)
+        self.irc.say(chan, message)
+        self.user_said(self.login, chan, message)
 
     def join(self, chan):
-        self.irc.join(chan.name)
+        self.irc.join(chan)
+        self.channels.add(chan)
 
-    def quit(self, chan):
-        chan.remove_listener(self)
-        if chan in self.channels:
-            self.channels.remove(chan)
+    def left(self, chan):
+        self.irc.left(chan)
+        self.channels.remove(chan)
+
+    def user_said(self, user, chan, message):
+        self.add_event(Message(user, chan, message))
+
+    def user_joined(self, user, chan):
+        self.add_event(UserConnect(user, chan))
+
+    def user_left(self, user, chan):
+        self.add_event(UserDisconnect(user, chan))
 
     def add_event(self, event):
         if self.connected:
@@ -117,5 +93,4 @@ class User(object):
 
     def destroy(self):
         print self, 'DISCONNECTED'
-        for chan in list(self.channels):
-            self.quit(chan)
+        self.irc.quit('Client disconnected')

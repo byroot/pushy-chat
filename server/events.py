@@ -54,7 +54,7 @@ class UserEvent(Event):
         self.chan = chan
 
     def _to_dict(self):
-        return {'login': self.user.login, 'chan': self.chan.name}
+        return {'login': self.user, 'chan': self.chan}
 
 
 class UserDisconnect(UserEvent):

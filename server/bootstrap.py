@@ -7,7 +7,7 @@ from twisted.web import resource, server, static
 from twisted.application import internet, service
 from twisted.internet import reactor
 
-from server.resources import Listen, Login, Say, Join, Quit, Data, JSONRequest
+from server.resources import Listen, Login, Say, Join, Left, Data, JSONRequest
 PUBLIC_DIRECTORY = abspath(join(dirname(__file__), '..', 'public'))
 
 #if __name__ == '__main__':
@@ -23,7 +23,7 @@ children = (('', Listen()),
             ('login', Login()),
             ('say', Say()),
             ('join', Join()),
-            ('quit', Quit()))
+            ('left', Left()))
 
 for name, child in children:
     chat.putChild(name, child)
