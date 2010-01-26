@@ -157,7 +157,7 @@ var Chan = Class({
     initialize: function(container, name) {
         this.container = container;
         this.name = name;
-        this_alpha_name = util.chan(name);
+        this.alpha_name = util.chan(name);
         this.elements = _([
             this.tab = Tab(this, container.client),
             this.window = ChatWindow(this),
