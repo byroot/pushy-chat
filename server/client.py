@@ -32,6 +32,9 @@ class IRCTransport(irc.IRCClient):
     def userQuit(self, user, channel):
         self.user.user_left(user, chan) # TODO: disabiguation
 
+    def irc_RPL_NAMREPLY(self, server, chan_data):
+        nickname, _, chan, users = chan_data
+        self.user.receive_user_list(chan, users.split())
 
 class IRCTransportFactory(protocol.ClientFactory):
     protocol = IRCTransport

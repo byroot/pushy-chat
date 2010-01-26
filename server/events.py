@@ -7,6 +7,9 @@ def lowercase(string):
 
 class Event(object):
 
+    def __init__(self, **kwargs):
+        self._dict = kwargs
+
     def get_type(self):
         return lowercase(self.__class__.__name__)
 
@@ -29,6 +32,8 @@ class Event(object):
         return data
 
     def _to_dict(self):
+        if type(self) is Event:
+            return self._dict
         return {'type': self.get_type()}
 
 
@@ -79,3 +84,5 @@ class Message(UserEvent):
 
     def _to_dict(self):
         return {'body': self.body}
+
+    

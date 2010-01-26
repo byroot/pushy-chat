@@ -1,6 +1,6 @@
 var EVENT_METHODS = _(['submit', 'click', 'keypress']);
 var CHANNEL_PREFIXES = _(['&', '#', '!', '+']);
-var SANITIZE_CHAN_NAME = /[#&!+]/
+
 
 function pushConnect(url, callback) {
     function parsePackets(packet, status, fulldata, xhr) {
@@ -27,9 +27,14 @@ function eventFunction(method, binding) {
 }
 
 var util = {
+    SANITIZE_CHAN_NAME: /[#&!+]/,
     
     login: function(src) {
         return src.split('!')[0];
+    },
+    
+    chan: function(src) {
+        return src.replace(this.SANITIZE_CHAN_NAME, '');
     }
     
 };
@@ -152,7 +157,7 @@ var Chan = Class({
     initialize: function(container, name) {
         this.container = container;
         this.name = name;
-        this_alpha_name = name.replace(SANITIZE_CHAN_NAME, '');
+        this_alpha_name = util.chan(name);
         this.elements = _([
             this.tab = Tab(this, container.client),
             this.window = ChatWindow(this),
@@ -197,6 +202,10 @@ var Chan = Class({
     handle_user_disconnect: function(message) {
         this.userList.removeLogin(message.login);
         this.window.appendNotification(message);
+    },
+    
+    handle_user_list: function(message) {
+        this.userList.updateLogins(message.listeners);
     }
 
 });
@@ -495,6 +504,6 @@ jQuery(function($){
     jQuery.enableAjaxStream(true);
     
     LoginForm('body', function(login) {
-        Client('body', login);
+        client = Client('body', login);
     });
 });

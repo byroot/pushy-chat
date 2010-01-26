@@ -3,7 +3,7 @@
 import time
 from itertools import chain
 
-from server.events import Message, UserConnect, UserDisconnect, UserRenamed
+from server.events import Event, Message, UserConnect, UserDisconnect, UserRenamed
 from server.client import IRCTransportFactory
 
 
@@ -78,6 +78,9 @@ class User(object):
 
     def user_left(self, user, chan):
         self.add_event(UserDisconnect(user, chan))
+
+    def receive_user_list(self, chan, users):
+        self.add_event(Event(type='user_list', chan=chan, listeners=users))
 
     def add_event(self, event):
         if self.connected:
