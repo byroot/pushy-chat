@@ -11,26 +11,26 @@ class IRCTransport(irc.IRCClient):
     def user(self):
         return self.factory.user
 
-    def privmsg(self, user, channel, message):
-        self.user.user_said(user, channel, message)
+    def privmsg(self, user, chan, message):
+        self.user.user_said(user, chan, message)
 
-    def noticed(self, user, channel, message):
-        self.user.user_said(user, channel, message)
+    def noticed(self, user, chan, message):
+        self.user.user_said(user, chan, message)
 
     def signedOn(self):
         self.user.update_irc_transport(self)
 
-    def joined(self, channel):
-        print "Joined %s." % (channel,)
+    def joined(self, chan):
+        print "Joined %s." % (chan,)
 
-    def userJoined(self, user, channel):
+    def userJoined(self, user, chan):
         self.user.user_joined(user, chan)
 
-    def userLeft(self, user, channel):
-        self.user.user_left(user, channel)
+    def userLeft(self, user, chan):
+        self.user.user_left(user, chan)
 
-    def userQuit(self, user, channel):
-        self.user.user_left(user, channel) # TODO: disabiguation
+    def userQuit(self, user, chan):
+        self.user.user_left(user, chan) # TODO: disabiguation
 
     def irc_RPL_NAMREPLY(self, server, chan_data):
         nickname, _, chan, users = chan_data
