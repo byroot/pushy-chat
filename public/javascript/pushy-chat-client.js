@@ -83,8 +83,10 @@ var ChatWindow = Class({
     tag: 'div',
 
     initialize: function(chan) {
+        
+        console.log('ChatWindow', chan);
         this.chan = chan;
-        this.addClass('window').attr('id', 'window-' + chan.aplha_name);
+        this.addClass('window').attr('id', 'window-' + chan.alpha_name);
         this.messageList = $('<ul>').addClass('message-list').appendTo(this);
     },
 
@@ -155,6 +157,8 @@ var Tab = Class({
 var Chan = Class({
     
     initialize: function(container, name) {
+        
+        console.log('Chan', name);
         this.container = container;
         this.name = name;
         this.alpha_name = util.chan(name);
@@ -163,6 +167,7 @@ var Chan = Class({
             this.window = ChatWindow(this),
             this.userList = UserList(this)
         ]);
+        console.log('this', this);
         this.appendTo(container);
     },
     
@@ -323,6 +328,7 @@ var ChanContainer = Class({
             }
             this.chans[chan_name] = Chan(this, chan_name);
         }
+        console.log('get', chan_name);
         return this.chans[chan_name];
     },
     

@@ -27,10 +27,10 @@ class IRCTransport(irc.IRCClient):
         self.user.user_joined(user, chan)
 
     def userLeft(self, user, channel):
-        self.user.user_left(user, chan)
+        self.user.user_left(user, channel)
 
     def userQuit(self, user, channel):
-        self.user.user_left(user, chan) # TODO: disabiguation
+        self.user.user_left(user, channel) # TODO: disabiguation
 
     def irc_RPL_NAMREPLY(self, server, chan_data):
         nickname, _, chan, users = chan_data
@@ -51,4 +51,4 @@ class IRCTransportFactory(protocol.ClientFactory):
         
     @classmethod
     def connect(cls, user):
-        reactor.connectTCP('localhost', 6667, cls(user))
+        reactor.connectTCP('irc.freenode.net', 6667, cls(user))
