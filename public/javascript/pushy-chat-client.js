@@ -28,9 +28,10 @@ function eventFunction(method, binding) {
 
 var util = {
     SANITIZE_CHAN_NAME: /[#&!+]/,
+    SANITIZE_LOGIN: /^\+/,
     
     login: function(src) {
-        return src.split('!')[0];
+        return src.split('!')[0].replace(this.SANITIZE_LOGIN, '');
     },
     
     chan: function(src) {
