@@ -26,6 +26,14 @@ function eventFunction(method, binding) {
     });
 }
 
+var util = {
+    
+    login: function(src) {
+        return src.split('!')[0];
+    }
+    
+};
+
 function Class(klass) {
     return function() {
         var base = klass.tag ? $('<' + klass.tag + '>') : {};
@@ -46,7 +54,7 @@ var Message = Class({
 
     initialize: function(login, body) {
         this.addClass('message')
-            .append($('<span>').addClass('login').text('<' + login + '> '))
+            .append($('<span>').addClass('login').text('<' + util.login(login) + '> '))
             .append($('<span>').addClass('message-body').text(body));
     }
 
@@ -100,7 +108,9 @@ var UserList = Class({
     
     sync: function() {
         this.clean();
-        this.empty().append(_(this.logins).map(function(l) { return $('<li>').text(l)[0] }));
+        this.empty().append(_(this.logins).map(function(l) { 
+            return $('<li>').text(util.login(l)).attr('alt', l)[0]
+        }));
     },
     
     updateLogins: function(logins) {
